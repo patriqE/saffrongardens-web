@@ -28,7 +28,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-white antialiased selection:bg-primary selection:text-background-dark min-h-screen flex flex-col relative overflow-x-hidden">
       {/* Top Navigation */}
-      <nav className="flex items-center justify-between p-4 pb-2 z-10 relative">
+      <nav className="flex items-center justify-between page-padding pb-2 z-10 relative">
         <Link
           href="/login"
           className="flex size-12 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/5 transition-colors active:scale-95"
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col px-6 pt-6 pb-6 w-full max-w-lg mx-auto z-10 relative">
+      <main className="flex-1 flex flex-col w-full max-w-lg mx-auto px-6 pt-6 pb-6 z-10 relative">
         <div className="mb-4">
           <h2 className="text-white tracking-tight text-[28px] font-bold leading-tight text-left">
             Reset your password

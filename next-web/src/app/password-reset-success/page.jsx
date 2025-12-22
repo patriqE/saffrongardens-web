@@ -5,7 +5,7 @@ export default function PasswordResetSuccessPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen flex flex-col antialiased selection:bg-primary selection:text-background-dark overflow-x-hidden">
       {/* Top App Bar */}
-      <div className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+      <div className="flex items-center bg-background-light dark:bg-background-dark w-full max-w-md mx-auto px-4 pb-2 justify-between sticky top-0 z-10">
         <Link
           href="/login"
           className="text-slate-900 dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
@@ -70,7 +70,7 @@ export default function PasswordResetSuccessPage() {
       </div>
 
       {/* Bottom Action Area */}
-      <div className="w-full p-4 pb-8 max-w-md mx-auto">
+      <div className="w-full max-w-md mx-auto px-4 pb-8">
         <Link href="/login">
           <button className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-5 bg-primary hover:bg-[#d9a50b] active:scale-[0.98] transition-all text-background-dark text-base font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20">
             <span className="truncate">Proceed to Login</span>

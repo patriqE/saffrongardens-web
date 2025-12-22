@@ -75,7 +75,7 @@ export default function ChangePasswordPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen flex flex-col antialiased selection:bg-primary selection:text-background-dark">
       {/* Top App Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between bg-surface-dark/95 backdrop-blur-sm p-4 pb-2 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between bg-surface-dark/95 backdrop-blur-sm page-padding pb-2 border-b border-white/5">
         <Link
           href="/verify-otp"
           aria-label="Go back"

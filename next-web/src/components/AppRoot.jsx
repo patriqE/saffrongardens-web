@@ -13,6 +13,7 @@ export default function AppRoot({ children }) {
     "/verify-otp",
     "/change-password",
     "/password-reset-success",
+    "/profile",
   ];
   const showNav = !hideNavRoutes.includes(pathname);
   return (
