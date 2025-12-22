@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col page-shell page-padding pt-6 pb-6 z-10 relative">
+      <main className="flex-1 flex flex-col w-full max-w-lg mx-auto px-6 pt-6 pb-6 z-10 relative">
         <div className="mb-4">
           <h2 className="text-white tracking-tight text-[28px] font-bold leading-tight text-left">
             Reset your password

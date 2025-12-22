@@ -89,7 +89,7 @@ export default function VerifyOtpPage() {
   return (
     <div className="font-display bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-start text-slate-900 dark:text-white antialiased overflow-x-hidden">
       {/* Top Navigation */}
-      <header className="page-shell page-padding pt-4 pb-2 flex items-center justify-between sticky top-0 z-10 bg-background-light dark:bg-background-dark">
+      <header className="w-full max-w-md mx-auto px-4 pt-4 pb-2 flex items-center justify-between sticky top-0 z-10 bg-background-light dark:bg-background-dark">
         <Link
           href="/forgot-password"
           className="flex items-center justify-center size-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -108,7 +108,7 @@ export default function VerifyOtpPage() {
       </header>
 
       {/* Main Content */}
-      <main className="page-shell page-padding flex flex-col pt-8 pb-8 flex-grow">
+      <main className="w-full max-w-md mx-auto px-6 flex flex-col pt-8 pb-8 flex-grow">
         {/* Icon / Visual Indicator */}
         <div className="flex justify-center mb-8">
           <div className="relative flex items-center justify-center size-20 rounded-full bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(242,185,13,0.1)]">

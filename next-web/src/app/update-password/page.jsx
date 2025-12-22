@@ -86,9 +86,9 @@ export default function UpdatePasswordPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col items-center">
       {/* Mobile Container */}
-      <div className="w-full page-shell min-h-screen flex flex-col relative overflow-hidden bg-background-light dark:bg-background-dark">
+      <div className="w-full max-w-md mx-auto min-h-screen flex flex-col relative overflow-hidden bg-background-light dark:bg-background-dark">
         {/* Header */}
-        <header className="flex items-center justify-between page-padding pb-2 sticky top-0 z-10 bg-background-light dark:bg-background-dark">
+        <header className="flex items-center justify-between px-4 pb-2 sticky top-0 z-10 bg-background-light dark:bg-background-dark">
           <Link
             href="/profile"
             className="text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
@@ -103,7 +103,7 @@ export default function UpdatePasswordPage() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 page-padding py-2 flex flex-col">
+        <main className="flex-1 px-4 py-2 flex flex-col">
           {success ? (
             <div className="flex flex-col items-center justify-center flex-1 gap-4">
               <div className="flex items-center justify-center size-20 rounded-full bg-green-500/10 border-2 border-green-500">

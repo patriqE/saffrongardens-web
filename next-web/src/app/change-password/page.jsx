@@ -93,7 +93,7 @@ export default function ChangePasswordPage() {
         </h2>
       </header>
 
-      <main className="flex-1 flex flex-col page-shell page-padding pt-6 pb-8">
+      <main className="flex-1 flex flex-col w-full max-w-md mx-auto px-4 pt-6 pb-8">
         {/* Headline & Description */}
         <div className="mb-8">
           <h1 className="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight text-left mb-3">
