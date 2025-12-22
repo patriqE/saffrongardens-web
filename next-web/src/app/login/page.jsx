@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-primary/5 dark:bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
 
       {/* Main Content Container */}
-      <div className="w-full max-w-[420px] px-6 py-8 flex flex-col z-10 relative">
+      <div className="page-shell page-padding flex flex-col z-10 relative">
         <Link
           href="/"
           className="absolute left-0 -top-2 text-[#9e9d47] dark:text-primary/80 hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"

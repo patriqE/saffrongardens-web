@@ -84,3 +84,16 @@ textarea::-webkit-scrollbar-thumb:hover {
         transform: translateX(100%);
     }
 }
+
+/* Responsive page utilities (shared across pages) */
+.page-shell {
+    @apply w-full mx-auto min-h-screen flex flex-col max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl;
+}
+
+.page-padding {
+    @apply px-4 sm:px-6 md:px-8 lg:px-12;
+}
+
+.content-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-5;
+}

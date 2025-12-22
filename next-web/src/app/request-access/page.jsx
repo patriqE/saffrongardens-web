@@ -103,7 +103,7 @@ export default function RequestAccessPage() {
       </div>
 
       {/* Main Content Container */}
-      <div className="w-full max-w-[480px] flex flex-col relative z-10 px-4 py-8">
+      <div className="page-shell page-padding flex flex-col relative z-10">
         {/* Header Section */}
         <div className="flex flex-col items-center pt-6 pb-8 text-center">
           <div className="mb-5 flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(249,245,6,0.1)]">
