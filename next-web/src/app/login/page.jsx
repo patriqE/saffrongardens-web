@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { MOCK_USERS, isMockAuthEnabled } from "@/lib/mockAuth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,14 +14,47 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showTestCredentials, setShowTestCredentials] = useState(
+    isMockAuthEnabled()
+  );
+
+  const getRoleDashboard = (role) => {
+    switch (role) {
+      case "ADMIN":
+        return "/admin";
+      case "EVENT_PLANNER":
+        return "/planner-dashboard";
+      case "VENDOR":
+        return "/vendor-dashboard";
+      default:
+        return "/booking";
+    }
+  };
+
+  const quickLogin = async (user) => {
+    setUsername(user.username);
+    setPassword(user.password);
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await login(user.username, user.password);
+      const dashboard = getRoleDashboard(result?.user?.role);
+      router.push(dashboard);
+    } catch (err) {
+      setError(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   async function onSubmit(e) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      await login(username, password);
-      router.push("/");
+      const result = await login(username, password);
+      const dashboard = getRoleDashboard(result?.user?.role);
+      router.push(dashboard);
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
@@ -139,6 +173,54 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
+
+        {/* Test Credentials (Development Only) */}
+        {showTestCredentials && (
+          <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide">
+                Test Credentials
+              </p>
+              <button
+                onClick={() => setShowTestCredentials(false)}
+                className="text-gray-400 hover:text-white text-xs"
+              >
+                Hide
+              </button>
+            </div>
+            <div className="space-y-2">
+              {Object.entries(MOCK_USERS).map(([key, user]) => (
+                <button
+                  key={key}
+                  onClick={() => quickLogin(user)}
+                  disabled={loading}
+                  className="w-full text-left p-2.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 transition-all group disabled:opacity-50"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white text-sm font-medium group-hover:text-primary transition-colors">
+                        {user.role === "ADMIN"
+                          ? "👑 Admin"
+                          : user.role === "EVENT_PLANNER"
+                          ? "📅 Event Planner"
+                          : "🏪 Vendor"}
+                      </p>
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        {user.username} / {user.password}
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-sm transition-colors">
+                      arrow_forward
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              Click any card to login instantly
+            </p>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-10 text-center">
