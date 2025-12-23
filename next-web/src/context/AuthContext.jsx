@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Api } from "@/lib/api";
+import { mockLogin, isMockAuthEnabled } from "@/lib/mockAuth";
 
 const AuthContext = createContext(null);
 
@@ -29,6 +30,15 @@ export function AuthProvider({ children }) {
   }, [token, user, loading]);
 
   async function login(email, password) {
+    // Use mock auth in development or when explicitly enabled
+    if (isMockAuthEnabled()) {
+      const data = await mockLogin(email, password);
+      setToken(data?.token || null);
+      setUser(data?.user || null);
+      return data;
+    }
+
+    // Real API login
     const data = await Api.login({ email, password });
     // Adjust property names based on backend response shape
     setToken(data?.token || data?.accessToken || null);
