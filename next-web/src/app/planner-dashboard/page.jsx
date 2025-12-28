@@ -19,35 +19,7 @@ export default function PlannerDashboardPage() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#1c1c0d] dark:text-[#f8f8f5] font-display min-h-screen flex flex-col antialiased selection:bg-primary selection:text-black pb-24">
-      {/* Top AppBar */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background-light/80 dark:bg-background-dark/80 border-b border-black/5 dark:border-white/10">
-        <div className="flex items-center p-4 justify-between max-w-md mx-auto w-full">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="bg-primary/20 rounded-full size-10 border-2 border-primary flex items-center justify-center">
-                <span className="text-lg font-bold text-primary">
-                  {user.name?.[0] || user.username?.[0] || "P"}
-                </span>
-              </div>
-              <div className="absolute bottom-0 right-0 size-3 bg-primary rounded-full border-2 border-background-light dark:border-background-dark"></div>
-            </div>
-            <div>
-              <h1 className="text-sm font-bold tracking-wide uppercase text-primary">
-                Saffron Gardens
-              </h1>
-            </div>
-          </div>
-          <button className="flex items-center justify-center rounded-full size-10 bg-transparent hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-current relative">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "24px" }}
-            >
-              notifications
-            </span>
-            <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
-          </button>
-        </div>
-      </header>
+      {/* Top AppBar removed for cleaner UI */}
 
       <main className="flex-1 w-full max-w-md mx-auto flex flex-col gap-6 px-4 pt-6">
         {/* Greeting & Overview */}

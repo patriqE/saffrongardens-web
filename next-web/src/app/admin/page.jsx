@@ -20,36 +20,7 @@ export default function AdminPage() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#1c1c0d] dark:text-[#f2f2e6] font-display antialiased overflow-x-hidden selection:bg-primary selection:text-black pb-28 min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between p-6 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md transition-colors duration-300">
-        <div className="flex items-center gap-3">
-          <div className="relative group cursor-pointer">
-            <div className="bg-center bg-no-repeat bg-cover rounded-full size-12 border-2 border-transparent group-hover:border-primary transition-all duration-300 bg-primary/20 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">
-                {user.name?.[0] || user.username?.[0] || "A"}
-              </span>
-            </div>
-            <div className="absolute bottom-0 right-0 size-3 bg-primary rounded-full border-2 border-background-light dark:border-background-dark"></div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wider uppercase">
-              Welcome back
-            </span>
-            <h2 className="text-lg font-bold leading-tight">
-              {user.name || user.username || "Admin"}
-            </h2>
-          </div>
-        </div>
-        <button className="relative flex items-center justify-center size-10 rounded-full bg-surface-light dark:bg-surface-dark shadow-sm active:scale-95 transition-transform">
-          <span
-            className="material-symbols-outlined text-gray-800 dark:text-white"
-            style={{ fontSize: "24px" }}
-          >
-            notifications
-          </span>
-          <span className="absolute top-2 right-2.5 size-2 bg-primary rounded-full animate-pulse"></span>
-        </button>
-      </header>
+      {/* Header removed for cleaner UI */}
 
       {/* Stats Section (Horizontal Scroll) */}
       <section className="mt-2 pl-6 overflow-hidden">

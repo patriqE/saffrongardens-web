@@ -8,9 +8,6 @@ const links = [
   { href: "/login", label: "Login" },
   { href: "/booking", label: "Booking" },
   { href: "/vendors", label: "Vendors" },
-  { href: "/planner-dashboard", label: "Planner" },
-  { href: "/vendor-dashboard", label: "Vendor Dashboard" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export default function Nav() {
@@ -26,8 +23,8 @@ export default function Nav() {
               href={l.href}
               className={
                 active
-                  ? "text-blue-600 font-semibold"
-                  : "text-gray-700 hover:text-blue-600"
+                  ? "text-primary font-semibold"
+                  : "text-gray-700 hover:text-primary"
               }
             >
               {l.label}

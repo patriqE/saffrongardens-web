@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 /**
@@ -14,12 +14,22 @@ import { useAuth } from "@/context/AuthContext";
  * @returns {Object} - { user, loading, isAuthorized }
  */
 export function useRequireAuth(options = {}) {
-  const { allowedRoles = null, redirectTo = "/login" } = options;
+  const {
+    allowedRoles = null,
+    redirectTo = "/login",
+    unauthorizedRedirectTo = null,
+    allowPreview = false,
+  } = options;
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPreview = allowPreview && searchParams?.get("preview") === "1";
 
   useEffect(() => {
     if (loading) return;
+
+    // In preview mode, skip all redirects so pages can be viewed.
+    if (isPreview) return;
 
     // Not authenticated
     if (!user) {
@@ -29,7 +39,12 @@ export function useRequireAuth(options = {}) {
 
     // Check role authorization if specified
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      // Redirect to appropriate dashboard based on user's actual role
+      // If explicit unauthorized redirect provided, use it.
+      if (unauthorizedRedirectTo) {
+        router.push(unauthorizedRedirectTo);
+        return;
+      }
+      // Else redirect to appropriate dashboard based on user's actual role
       const roleDashboard = {
         ADMIN: "/admin",
         EVENT_PLANNER: "/planner-dashboard",
@@ -40,7 +55,7 @@ export function useRequireAuth(options = {}) {
   }, [user, loading, router, allowedRoles, redirectTo]);
 
   const isAuthorized =
-    !loading && user && (!allowedRoles || allowedRoles.includes(user.role));
+    isPreview || (!loading && user && (!allowedRoles || allowedRoles.includes(user.role)));
 
   return { user, loading, isAuthorized };
 }
