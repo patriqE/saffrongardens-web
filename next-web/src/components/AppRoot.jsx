@@ -14,6 +14,12 @@ export default function AppRoot({ children }) {
     "/change-password",
     "/password-reset-success",
     "/profile",
+    "/vendor-dashboard",
+    "/planner-dashboard",
+    "/admin",
+    "/complete-profile",
+    "/profile-setup",
+    "/profile-submitted",
   ];
   const showNav = !hideNavRoutes.includes(pathname);
   return (

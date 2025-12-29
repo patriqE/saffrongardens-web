@@ -112,39 +112,7 @@ export default function VendorDashboardPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#1c1c0d] dark:text-[#f2f2e8] font-display transition-colors duration-300 antialiased overflow-x-hidden">
       <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto shadow-2xl overflow-hidden pb-24 bg-background-light dark:bg-background-dark">
-        {/* Header */}
-        <header className="flex items-center justify-between p-6 pt-8 bg-background-light dark:bg-background-dark sticky top-0 z-20">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="bg-primary/20 rounded-full size-12 ring-2 ring-primary/50 flex items-center justify-center">
-                <span className="text-xl font-bold text-primary">
-                  {user.businessName?.[0] ||
-                    user.name?.[0] ||
-                    user.username?.[0] ||
-                    "V"}
-                </span>
-              </div>
-              <div className="absolute bottom-0 right-0 size-3 bg-primary rounded-full border-2 border-background-light dark:border-background-dark"></div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Welcome back,
-              </p>
-              <h2 className="text-xl font-bold leading-tight">
-                {user.businessName || user.name || user.username}
-              </h2>
-            </div>
-          </div>
-          <button className="flex size-10 items-center justify-center rounded-full bg-surface-light dark:bg-surface-dark border border-gray-100 dark:border-white/10 text-gray-800 dark:text-white transition-transform hover:scale-105 active:scale-95 relative">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "24px" }}
-            >
-              notifications
-            </span>
-            <div className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-surface-light dark:border-surface-dark"></div>
-          </button>
-        </header>
+        {/* Header removed for cleaner UI */}
 
         {/* Availability Toggle */}
         <div className="px-6 mb-6">

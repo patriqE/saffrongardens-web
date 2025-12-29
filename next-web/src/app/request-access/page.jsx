@@ -1,24 +1,18 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function RequestAccessPage() {
   const [form, setForm] = useState({
-    role: "planner",
     username: "",
-    email: "",
+    igProfile: "",
     password: "",
     confirmPassword: "",
-    businessName: "",
-    category: "",
-    description: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
-
-  const isPlanner = useMemo(() => form.role === "planner", [form.role]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -30,8 +24,8 @@ export default function RequestAccessPage() {
     setError(null);
 
     // basic client-side validation
-    if (!form.username || !form.password) {
-      setError("Username and password are required");
+    if (!form.username || !form.igProfile || !form.password) {
+      setError("Username, Instagram profile, and password are required");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -41,54 +35,27 @@ export default function RequestAccessPage() {
 
     setSubmitting(true);
     try {
-      const base =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const url = base ? `${base}/api/register` : "/api/register";
 
-      if (isPlanner) {
-        const res = await fetch(`${base}/api/planner/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: form.username,
-            password: form.password,
-          }),
-        });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.username,
+          igProfile: form.igProfile,
+          password: form.password,
+        }),
+      });
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => null);
-          throw new Error(data?.error || "Planner registration failed");
-        }
-      } else {
-        const res = await fetch(`${base}/api/vendor/apply`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: form.username,
-            email: form.email,
-            password: form.password,
-            businessName: form.businessName,
-            category: form.category,
-            description: form.description,
-          }),
-        });
-
-        if (!res.ok) {
-          // vendor apply may return plain text
-          const text = await res.text();
-          const asJson = (() => {
-            try {
-              return JSON.parse(text);
-            } catch {
-              return null;
-            }
-          })();
-          throw new Error(asJson?.error || text || "Vendor application failed");
-        }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Registration failed");
       }
 
       setSubmitted(true);
     } catch (err) {
-      setError(err?.message || "Unable to submit request");
+      setError(err?.message || "Unable to submit registration");
     } finally {
       setSubmitting(false);
     }
@@ -117,46 +84,21 @@ export default function RequestAccessPage() {
             />
           </div>
           <h1 className="text-white tracking-tight text-[32px] font-bold leading-tight pb-3">
-            Exclusive Access
+            Join Saffron Gardens
           </h1>
           <p className="text-gray-300/80 text-base font-normal leading-relaxed max-w-xs mx-auto">
-            Join Saffron Gardens as a planner or vendor. Submit your details for
-            approval.
+            Create your account and join our community of event planners and
+            vendors.
           </p>
         </div>
 
         {submitted ? (
           <div className="rounded-lg border border-primary/30 bg-primary/10 text-white px-4 py-3 text-sm font-medium">
-            Thanks! We received your request. Our team will reach out shortly.
+            Thanks! Your registration is complete. Our team will review and
+            contact you shortly.
           </div>
         ) : (
           <form className="flex flex-col w-full gap-5" onSubmit={onSubmit}>
-            {/* Role toggle */}
-            <div className="flex items-center justify-center gap-3 bg-[#2f2d16] border border-[#6a692f] rounded-lg p-2 text-sm text-white">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="planner"
-                  checked={isPlanner}
-                  onChange={handleChange}
-                  className="text-primary focus:ring-primary"
-                />
-                Planner
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="vendor"
-                  checked={!isPlanner}
-                  onChange={handleChange}
-                  className="text-primary focus:ring-primary"
-                />
-                Vendor
-              </label>
-            </div>
-
             {/* Username */}
             <div className="flex flex-col w-full group">
               <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
@@ -173,23 +115,21 @@ export default function RequestAccessPage() {
               />
             </div>
 
-            {/* Email (vendor only) */}
-            {!isPlanner && (
-              <div className="flex flex-col w-full group">
-                <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                  Email Address
-                </label>
-                <input
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                  placeholder="Enter your email address"
-                  type="email"
-                  required={!isPlanner}
-                />
-              </div>
-            )}
+            {/* Instagram Profile Link */}
+            <div className="flex flex-col w-full group">
+              <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                Instagram Profile
+              </label>
+              <input
+                name="igProfile"
+                value={form.igProfile}
+                onChange={handleChange}
+                className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
+                placeholder="e.g., https://instagram.com/yourprofile"
+                type="url"
+                required
+              />
+            </div>
 
             {/* Password */}
             <div className="flex flex-col w-full group">
@@ -223,74 +163,6 @@ export default function RequestAccessPage() {
               />
             </div>
 
-            {/* Vendor-only fields */}
-            {!isPlanner && (
-              <>
-                <div className="flex flex-col w-full group">
-                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                    Business Name
-                  </label>
-                  <input
-                    name="businessName"
-                    value={form.businessName}
-                    onChange={handleChange}
-                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                    placeholder="Your business name"
-                    type="text"
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col w-full group">
-                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                    Category
-                  </label>
-                  <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                    required
-                  >
-                    <option value="" className="text-black">
-                      Select a category
-                    </option>
-                    <option value="CATERING" className="text-black">
-                      Catering
-                    </option>
-                    <option value="DECOR" className="text-black">
-                      Decor
-                    </option>
-                    <option value="PHOTOGRAPHY" className="text-black">
-                      Photography
-                    </option>
-                    <option value="ENTERTAINMENT" className="text-black">
-                      Entertainment
-                    </option>
-                    <option value="VENUE" className="text-black">
-                      Venue
-                    </option>
-                    <option value="OTHER" className="text-black">
-                      Other
-                    </option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col w-full group">
-                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                    Tell us more (optional)
-                  </label>
-                  <textarea
-                    name="description"
-                    value={form.description}
-                    onChange={handleChange}
-                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm h-32 resize-none"
-                    placeholder="Describe your services and experience"
-                  />
-                </div>
-              </>
-            )}
-
             {error && (
               <p className="text-red-400 text-sm" role="alert">
                 {error}
@@ -304,7 +176,7 @@ export default function RequestAccessPage() {
                 disabled={submitting}
               >
                 <span className="relative z-10">
-                  {submitting ? "Sending..." : "Request Invitation"}
+                  {submitting ? "Creating Account..." : "Create Account"}
                 </span>
                 <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">
                   arrow_forward
@@ -317,7 +189,7 @@ export default function RequestAccessPage() {
         {/* Footer */}
         <div className="text-center pt-6 pb-8">
           <p className="text-gray-500 text-sm">
-            Already approved?
+            Already have an account?
             <Link
               className="text-white hover:text-primary transition-colors font-medium underline underline-offset-4 decoration-primary/30 hover:decoration-primary ml-1"
               href="/login"

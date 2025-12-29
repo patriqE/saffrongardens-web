@@ -70,13 +70,15 @@ export default function LoginPage() {
 
       {/* Main Content Container */}
       <div className="w-full max-w-md mx-auto px-6 py-8 flex flex-col z-10 relative">
-        <Link
-          href="/"
+        <button
+          type="button"
+          onClick={() => router.back()}
           className="absolute left-0 -top-2 text-[#9e9d47] dark:text-primary/80 hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"
+          aria-label="Go back"
         >
-          <span className="material-symbols-outlined text-base">home</span>
-          Home
-        </Link>
+          <span className="material-symbols-outlined text-base">arrow_back_ios_new</span>
+          Back
+        </button>
         {/* Header Section */}
         <div className="flex flex-col items-center mb-10">
           <div className="mb-6 flex items-center justify-center">
