@@ -55,7 +55,8 @@ export function useRequireAuth(options = {}) {
   }, [user, loading, router, allowedRoles, redirectTo]);
 
   const isAuthorized =
-    isPreview || (!loading && user && (!allowedRoles || allowedRoles.includes(user.role)));
+    isPreview ||
+    (!loading && user && (!allowedRoles || allowedRoles.includes(user.role)));
 
   return { user, loading, isAuthorized };
 }

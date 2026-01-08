@@ -12,14 +12,20 @@ export default function ProfileSetupPage() {
   });
   const router = useRouter();
 
-  const [role, setRole] = useState("planner");
+  const [role, setRole] = useState(
+    user?.role === "EVENT_PLANNER" ? "planner" : "vendor"
+  );
+  const [businessName, setBusinessName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [taxId, setTaxId] = useState("");
-  const [category, setCategory] = useState("Weddings");
+  const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
-  const [bio, setBio] = useState("");
-  const [businessLicense, setBusinessLicense] = useState(null);
-  const [portfolioPhotos, setPortfolioPhotos] = useState([]);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -43,7 +49,10 @@ export default function ProfileSetupPage() {
     e.preventDefault();
     setError(null);
 
-    if (!companyName || !category || !bio) {
+    // Validate required fields
+    const isPlanner = role === "planner";
+    const requiredField = isPlanner ? fullName : businessName;
+    if (!requiredField || !description) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -53,17 +62,27 @@ export default function ProfileSetupPage() {
       const base =
         process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
       const fd = new FormData();
-      fd.append("role", role);
-      fd.append("companyName", companyName);
-      fd.append("taxId", taxId);
-      fd.append("category", category);
+
+      // Common fields
+      fd.append("description", description);
       fd.append("website", website);
-      fd.append("bio", bio);
-      if (businessLicense) fd.append("businessLicense", businessLicense);
-      if (portfolioPhotos?.length) {
-        portfolioPhotos.forEach((file, idx) =>
-          fd.append(`portfolio_${idx}`, file)
-        );
+      fd.append("phoneNumber", phoneNumber);
+      fd.append("email", email);
+
+      // Role-specific fields
+      if (isPlanner) {
+        fd.append("fullName", fullName);
+        fd.append("companyName", companyName);
+      } else {
+        fd.append("businessName", businessName);
+        fd.append("address", address);
+        fd.append("city", city);
+        fd.append("state", state);
+      }
+
+      // Append files
+      if (files?.length) {
+        files.forEach((file) => fd.append("files", file));
       }
 
       const res = await fetch(`${base}/api/profile/complete`, {
@@ -82,7 +101,6 @@ export default function ProfileSetupPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        // After successful submission route to profile submitted screen
         router.push("/profile-submitted");
       }, 800);
     } catch (err) {
@@ -169,69 +187,161 @@ export default function ProfileSetupPage() {
         <form className="space-y-6" onSubmit={onSubmit}>
           {/* Company Details */}
           <div className="space-y-5">
-            <div className="group">
-              <label
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
-                htmlFor="companyName"
-              >
-                Company Name
-              </label>
-              <div className="relative">
-                <input
-                  className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all duration-300"
-                  id="companyName"
-                  placeholder="e.g. Elite Events Co."
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
+            {/* Vendor: Business Name */}
+            {role === "vendor" && (
+              <div className="group">
+                <label
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                  htmlFor="businessName"
+                >
+                  Business Name *
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all duration-300"
+                    id="businessName"
+                    placeholder="e.g. Elite Events Co."
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Planner: Full Name & Company Name */}
+            {role === "planner" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="group">
+                    <label
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                      htmlFor="fullName"
+                    >
+                      Full Name *
+                    </label>
+                    <input
+                      className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                      id="fullName"
+                      placeholder="First & Last"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="group">
+                    <label
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                      htmlFor="companyName"
+                    >
+                      Company Name
+                    </label>
+                    <input
+                      className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                      id="companyName"
+                      placeholder="e.g. Elite Events Co."
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Vendor: Address Fields */}
+            {role === "vendor" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="group col-span-2">
+                  <label
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                    htmlFor="address"
+                  >
+                    Address
+                  </label>
+                  <input
+                    className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                    id="address"
+                    placeholder="Street address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+                <div className="group">
+                  <label
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                    htmlFor="city"
+                  >
+                    City
+                  </label>
+                  <input
+                    className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                    id="city"
+                    placeholder="City"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+                <div className="group">
+                  <label
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
+                    htmlFor="state"
+                  >
+                    State
+                  </label>
+                  <input
+                    className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                    id="state"
+                    placeholder="State"
+                    type="text"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Common: Phone Number & Email */}
             <div className="grid grid-cols-2 gap-4">
               <div className="group">
                 <label
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
-                  htmlFor="taxId"
+                  htmlFor="phoneNumber"
                 >
-                  Tax ID / EIN
+                  Phone Number
                 </label>
                 <input
                   className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
-                  id="taxId"
-                  placeholder="XX-XXXXXXX"
-                  type="text"
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
+                  id="phoneNumber"
+                  placeholder="+1 (555) 000-0000"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                 />
               </div>
               <div className="group">
                 <label
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
-                  htmlFor="category"
+                  htmlFor="email"
                 >
-                  Category
+                  Email
                 </label>
-                <div className="relative">
-                  <select
-                    className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 pr-8 appearance-none transition-all"
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option>Weddings</option>
-                    <option>Corporate</option>
-                    <option>Social</option>
-                    <option>Full Service</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-3.5 text-gray-500 dark:text-gray-400 pointer-events-none">
-                    expand_more
-                  </span>
-                </div>
+                <input
+                  className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all"
+                  id="email"
+                  placeholder="your@email.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
 
+            {/* Common: Website */}
             <div className="group">
               <label
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
@@ -254,20 +364,21 @@ export default function ProfileSetupPage() {
               </div>
             </div>
 
+            {/* Common: Description */}
             <div className="group">
               <label
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 pl-1"
-                htmlFor="bio"
+                htmlFor="description"
               >
-                Short Bio
+                Description *
               </label>
               <textarea
                 className="w-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 placeholder-gray-400 dark:placeholder-white/20 transition-all resize-none"
-                id="bio"
+                id="description"
                 placeholder="Briefly describe your services..."
                 rows={3}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 required
               />
             </div>
@@ -279,65 +390,39 @@ export default function ProfileSetupPage() {
               Credentials & Verification
             </h4>
             <div className="space-y-4">
-              {/* Upload Item 1 */}
-              <div className="relative group cursor-pointer">
-                <input
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) =>
-                    setBusinessLicense(e.target.files?.[0] || null)
-                  }
-                />
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/20 bg-gray-50 dark:bg-surface-dark hover:bg-gray-100 dark:hover:bg-white/5 transition-all group-hover:border-primary/50">
-                  <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-primary">
-                      description
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      Business License
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      PDF or JPG (Max 5MB)
-                    </p>
-                  </div>
-                  <span className="material-symbols-outlined text-gray-400 dark:text-gray-500 group-hover:text-primary transition-colors">
-                    upload
-                  </span>
-                </div>
-              </div>
-              {/* Upload Item 2 */}
+              {/* File Upload */}
               <div className="relative group cursor-pointer">
                 <input
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   type="file"
                   multiple
-                  accept=".jpg,.jpeg,.png"
-                  onChange={(e) =>
-                    setPortfolioPhotos(Array.from(e.target.files || []))
-                  }
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))}
                 />
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-gray-300 dark:border-white/20 bg-gray-50 dark:bg-surface-dark hover:bg-gray-100 dark:hover:bg-white/5 transition-all group-hover:border-primary/50">
                   <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-primary">
-                      imagesmode
+                      upload_file
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      Recent Work Portfolio
+                      Upload Files
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Upload up to 5 photos
+                      Documents, licenses, or portfolio samples (PDF, JPG, PNG)
                     </p>
                   </div>
                   <span className="material-symbols-outlined text-gray-400 dark:text-gray-500 group-hover:text-primary transition-colors">
-                    add_photo_alternate
+                    add_circle
                   </span>
                 </div>
               </div>
+              {files.length > 0 && (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {files.length} file(s) selected
+                </div>
+              )}
             </div>
           </div>
 

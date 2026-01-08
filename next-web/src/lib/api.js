@@ -43,4 +43,5 @@ export const Api = {
   login: (credentials) =>
     apiFetch("/api/auth/login", { method: "POST", body: credentials }),
   me: (token) => apiFetch("/api/auth/me", { authToken: token }),
+  fetchUserProfile: (token) => apiFetch("/api/auth/me", { authToken: token }),
 };

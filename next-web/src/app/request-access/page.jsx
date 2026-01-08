@@ -9,6 +9,7 @@ export default function RequestAccessPage() {
     igProfile: "",
     password: "",
     confirmPassword: "",
+    role: "VENDOR",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -45,6 +46,8 @@ export default function RequestAccessPage() {
           username: form.username,
           igProfile: form.igProfile,
           password: form.password,
+          confirmPassword: form.confirmPassword,
+          role: form.role,
         }),
       });
 
@@ -99,6 +102,41 @@ export default function RequestAccessPage() {
           </div>
         ) : (
           <form className="flex flex-col w-full gap-5" onSubmit={onSubmit}>
+            {/* Role Selector */}
+            <div className="flex flex-col w-full group">
+              <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                I am a
+              </label>
+              <div className="flex p-1 bg-gray-200 dark:bg-[#3a3a1f] rounded-xl">
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    className="peer sr-only"
+                    name="role"
+                    type="radio"
+                    value="VENDOR"
+                    checked={form.role === "VENDOR"}
+                    onChange={handleChange}
+                  />
+                  <div className="flex items-center justify-center py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 transition-all peer-checked:bg-white dark:peer-checked:bg-[#2e2d1a] peer-checked:text-primary peer-checked:shadow-sm">
+                    Vendor
+                  </div>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    className="peer sr-only"
+                    name="role"
+                    type="radio"
+                    value="EVENT_PLANNER"
+                    checked={form.role === "EVENT_PLANNER"}
+                    onChange={handleChange}
+                  />
+                  <div className="flex items-center justify-center py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 transition-all peer-checked:bg-white dark:peer-checked:bg-[#2e2d1a] peer-checked:text-primary peer-checked:shadow-sm">
+                    Event Planner
+                  </div>
+                </label>
+              </div>
+            </div>
+
             {/* Username */}
             <div className="flex flex-col w-full group">
               <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">

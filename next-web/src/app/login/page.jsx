@@ -76,7 +76,9 @@ export default function LoginPage() {
           className="absolute left-0 -top-2 text-[#9e9d47] dark:text-primary/80 hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"
           aria-label="Go back"
         >
-          <span className="material-symbols-outlined text-base">arrow_back_ios_new</span>
+          <span className="material-symbols-outlined text-base">
+            arrow_back_ios_new
+          </span>
           Back
         </button>
         {/* Header Section */}
