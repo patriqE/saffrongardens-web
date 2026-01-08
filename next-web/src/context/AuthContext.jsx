@@ -29,21 +29,32 @@ export function AuthProvider({ children }) {
     }
   }, [token, user, loading]);
 
-  async function login(email, password) {
+  async function login(username, password) {
     // Use mock auth in development or when explicitly enabled
     if (isMockAuthEnabled()) {
-      const data = await mockLogin(email, password);
+      const data = await mockLogin(username, password);
       setToken(data?.token || null);
       setUser(data?.user || null);
       return data;
     }
 
-    // Real API login
-    const data = await Api.login({ email, password });
-    // Adjust property names based on backend response shape
-    setToken(data?.token || data?.accessToken || null);
-    setUser(data?.user || null);
-    return data;
+    // Real API login - returns token
+    const loginData = await Api.login({ username, password });
+    const token = loginData?.token || null;
+    setToken(token);
+
+    // Fetch user profile with token to get user data including canComplete flag
+    if (token) {
+      try {
+        const userData = await Api.fetchUserProfile(token);
+        setUser(userData || null);
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+        setUser(null);
+      }
+    }
+
+    return { token, user };
   }
 
   function logout() {
