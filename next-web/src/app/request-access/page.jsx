@@ -5,10 +5,12 @@ import Image from "next/image";
 
 export default function RequestAccessPage() {
   const [form, setForm] = useState({
-    username: "",
+    email: "",
+    businessName: "",
+    website: "",
+    fullName: "",
+    otherSocials: "",
     igProfile: "",
-    password: "",
-    confirmPassword: "",
     role: "VENDOR",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -25,12 +27,18 @@ export default function RequestAccessPage() {
     setError(null);
 
     // basic client-side validation
-    if (!form.username || !form.igProfile || !form.password) {
-      setError("Username, Instagram profile, and password are required");
+    const roleField =
+      form.role === "VENDOR" ? form.businessName : form.fullName;
+    if (!form.email || !roleField || !form.igProfile) {
+      const fieldName = form.role === "VENDOR" ? "Business Name" : "Full Name";
+      setError(`Email, ${fieldName}, and Instagram profile are required`);
       return;
     }
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -39,16 +47,29 @@ export default function RequestAccessPage() {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL;
       const url = base ? `${base}/api/register` : "/api/register";
 
+      const payload = {
+        email: form.email,
+        igProfile: form.igProfile,
+        role: form.role,
+      };
+
+      // Add role-specific fields
+      if (form.role === "VENDOR") {
+        payload.businessName = form.businessName;
+        if (form.website) {
+          payload.website = form.website;
+        }
+      } else {
+        payload.fullName = form.fullName;
+        if (form.otherSocials) {
+          payload.otherSocials = form.otherSocials;
+        }
+      }
+
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: form.username,
-          igProfile: form.igProfile,
-          password: form.password,
-          confirmPassword: form.confirmPassword,
-          role: form.role,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -137,21 +158,86 @@ export default function RequestAccessPage() {
               </div>
             </div>
 
-            {/* Username */}
+            {/* Email */}
             <div className="flex flex-col w-full group">
               <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                Username
+                Email Address
               </label>
               <input
-                name="username"
-                value={form.username}
+                name="email"
+                value={form.email}
                 onChange={handleChange}
                 className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                placeholder="Choose a username"
-                type="text"
+                placeholder="your@email.com"
+                type="email"
                 required
               />
             </div>
+
+            {/* Business Name / Full Name (Role-specific) */}
+            {form.role === "VENDOR" ? (
+              <>
+                <div className="flex flex-col w-full group">
+                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                    Business Name
+                  </label>
+                  <input
+                    name="businessName"
+                    value={form.businessName}
+                    onChange={handleChange}
+                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
+                    placeholder="Your business name"
+                    type="text"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col w-full group">
+                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                    Website <span className="text-gray-500">(Optional)</span>
+                  </label>
+                  <input
+                    name="website"
+                    value={form.website}
+                    onChange={handleChange}
+                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
+                    placeholder="e.g., https://yourbusiness.com"
+                    type="url"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col w-full group">
+                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                    Full Name
+                  </label>
+                  <input
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
+                    placeholder="Your full name"
+                    type="text"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col w-full group">
+                  <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
+                    Other Socials <span className="text-gray-500">(Optional)</span>
+                  </label>
+                  <input
+                    name="otherSocials"
+                    value={form.otherSocials}
+                    onChange={handleChange}
+                    className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
+                    placeholder="e.g., LinkedIn, TikTok, etc."
+                    type="text"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Instagram Profile Link */}
             <div className="flex flex-col w-full group">
@@ -169,38 +255,6 @@ export default function RequestAccessPage() {
               />
             </div>
 
-            {/* Password */}
-            <div className="flex flex-col w-full group">
-              <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                Password
-              </label>
-              <input
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                placeholder="Create a password"
-                type="password"
-                required
-              />
-            </div>
-
-            {/* Confirm Password */}
-            <div className="flex flex-col w-full group">
-              <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                Confirm Password
-              </label>
-              <input
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className="form-input-custom flex w-full rounded-lg text-white border border-[#6a692f] bg-[#353418] h-14 placeholder:text-[#cccb8e]/70 p-[15px] text-base font-normal leading-normal focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
-                placeholder="Re-enter password"
-                type="password"
-                required
-              />
-            </div>
-
             {error && (
               <p className="text-red-400 text-sm" role="alert">
                 {error}
@@ -214,7 +268,7 @@ export default function RequestAccessPage() {
                 disabled={submitting}
               >
                 <span className="relative z-10">
-                  {submitting ? "Creating Account..." : "Create Account"}
+                  {submitting ? "Submitting Request..." : "Request Access"}
                 </span>
                 <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">
                   arrow_forward
