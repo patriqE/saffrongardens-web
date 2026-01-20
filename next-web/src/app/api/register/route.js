@@ -8,7 +8,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { email, businessName, website, fullName, otherSocials, igProfile, role } = body || {};
+  const {
+    email,
+    businessName,
+    website,
+    fullName,
+    otherSocials,
+    igProfile,
+    role,
+  } = body || {};
 
   // Validate email
   if (!email) {

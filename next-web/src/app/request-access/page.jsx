@@ -225,7 +225,8 @@ export default function RequestAccessPage() {
 
                 <div className="flex flex-col w-full group">
                   <label className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2 pl-1 group-focus-within:text-primary transition-colors">
-                    Other Socials <span className="text-gray-500">(Optional)</span>
+                    Other Socials{" "}
+                    <span className="text-gray-500">(Optional)</span>
                   </label>
                   <input
                     name="otherSocials"
