@@ -46,6 +46,7 @@ export function useRequireAuth(options = {}) {
       }
       // Else redirect to appropriate dashboard based on user's actual role
       const roleDashboard = {
+        SUPER_ADMIN: "/admin",
         ADMIN: "/admin",
         EVENT_PLANNER: "/planner-dashboard",
         VENDOR: "/vendor-dashboard",
