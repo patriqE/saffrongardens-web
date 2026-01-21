@@ -5,7 +5,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function AdminPage() {
-  const { user, loading } = useRequireAuth({ allowedRoles: ["ADMIN", "SUPER_ADMIN"] });
+  const { user, loading } = useRequireAuth({
+    allowedRoles: ["ADMIN", "SUPER_ADMIN"],
+  });
   const { token } = useAuth();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
@@ -17,12 +19,16 @@ export default function AdminPage() {
 
       try {
         setLoadingRequests(true);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
-        const response = await fetch(`${baseUrl}/api/admin/registration/pending`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+        const response = await fetch(
+          `${baseUrl}/api/admin/registration/pending`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status}`);
@@ -95,7 +101,9 @@ export default function AdminPage() {
               </span>
             </div>
             <div>
-              <p className="text-3xl font-bold tracking-tight">{pendingRequests.length}</p>
+              <p className="text-3xl font-bold tracking-tight">
+                {pendingRequests.length}
+              </p>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Pending Requests
               </p>
@@ -152,7 +160,7 @@ export default function AdminPage() {
             See All
           </button>
         </div>
-        
+
         {loadingRequests ? (
           <div className="flex items-center justify-center py-8">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
@@ -163,7 +171,9 @@ export default function AdminPage() {
           </div>
         ) : pendingRequests.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">inbox</span>
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">
+              inbox
+            </span>
             <p className="text-sm">No pending requests</p>
           </div>
         ) : (
@@ -181,7 +191,7 @@ export default function AdminPage() {
                   </div>
                   <div className="flex flex-col">
                     <p className="font-bold text-sm line-clamp-1">
-                      {request.role === "VENDOR" 
+                      {request.role === "VENDOR"
                         ? request.businessName || request.email
                         : request.fullName || request.email}
                     </p>
@@ -196,9 +206,11 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     className="flex items-center justify-center size-9 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 transition hover:bg-red-200"
-                    onClick={() => {/* TODO: implement reject */}}
+                    onClick={() => {
+                      /* TODO: implement reject */
+                    }}
                   >
                     <span
                       className="material-symbols-outlined"
@@ -207,9 +219,11 @@ export default function AdminPage() {
                       close
                     </span>
                   </button>
-                  <button 
+                  <button
                     className="flex items-center justify-center size-9 rounded-full bg-primary text-black shadow-lg shadow-primary/20 transition hover:brightness-110"
-                    onClick={() => {/* TODO: implement approve */}}
+                    onClick={() => {
+                      /* TODO: implement approve */
+                    }}
                   >
                     <span
                       className="material-symbols-outlined"
