@@ -14,12 +14,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showTestCredentials, setShowTestCredentials] = useState(
-    isMockAuthEnabled()
-  );
+  const [showTestCredentials, setShowTestCredentials] =
+    useState(isMockAuthEnabled());
 
   const getRoleDashboard = (role) => {
     switch (role) {
+      case "SUPER_ADMIN":
       case "ADMIN":
         return "/admin";
       case "EVENT_PLANNER":
@@ -206,8 +206,8 @@ export default function LoginPage() {
                         {user.role === "ADMIN"
                           ? "👑 Admin"
                           : user.role === "EVENT_PLANNER"
-                          ? "📅 Event Planner"
-                          : "🏪 Vendor"}
+                            ? "📅 Event Planner"
+                            : "🏪 Vendor"}
                       </p>
                       <p className="text-gray-400 text-xs mt-0.5">
                         {user.username} / {user.password}

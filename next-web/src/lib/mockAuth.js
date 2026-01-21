@@ -50,7 +50,7 @@ export async function mockLogin(username, password) {
   const user = Object.values(MOCK_USERS).find(
     (u) =>
       (u.username === username || u.email === username) &&
-      u.password === password
+      u.password === password,
   );
 
   if (!user) {
@@ -73,6 +73,6 @@ export async function mockLogin(username, password) {
 export const isMockAuthEnabled = () => {
   return (
     process.env.NEXT_PUBLIC_USE_MOCK_AUTH === "true" ||
-    process.env.NODE_ENV === "development"
+    process.env.NEXT_PUBLIC_USE_MOCK_AUTH === "1"
   );
 };

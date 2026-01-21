@@ -1,9 +1,68 @@
 "use client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function AdminPage() {
-  const { user, loading } = useRequireAuth({ allowedRoles: ["ADMIN"] });
+  const { user, loading } = useRequireAuth({ allowedRoles: ["ADMIN", "SUPER_ADMIN"] });
+  const { token } = useAuth();
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchPendingRequests() {
+      if (!token) return;
+
+      try {
+        setLoadingRequests(true);
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+        const response = await fetch(`${baseUrl}/api/admin/registration/pending`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setPendingRequests(data || []);
+      } catch (err) {
+        console.error("Error fetching pending requests:", err);
+        setError(err.message);
+      } finally {
+        setLoadingRequests(false);
+      }
+    }
+
+    fetchPendingRequests();
+  }, [token]);
+
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return "";
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffMs = now - past;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  const getRoleIcon = (role) => {
+    return role === "VENDOR" ? "restaurant" : "person";
+  };
+
+  const getRoleLabel = (role) => {
+    return role === "VENDOR" ? "Vendor" : "Planner";
+  };
 
   if (loading) {
     return (
@@ -36,7 +95,7 @@ export default function AdminPage() {
               </span>
             </div>
             <div>
-              <p className="text-3xl font-bold tracking-tight">12</p>
+              <p className="text-3xl font-bold tracking-tight">{pendingRequests.length}</p>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Pending Requests
               </p>
@@ -93,85 +152,77 @@ export default function AdminPage() {
             See All
           </button>
         </div>
-        <div className="flex flex-col gap-3">
-          {/* List Item 1 */}
-          <div className="flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/20 rounded-full size-12 shrink-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">
-                  restaurant
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold text-sm line-clamp-1">
-                  Elite Catering Co.
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-[10px] font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide">
-                    Vendor
-                  </span>
-                  <span className="text-xs text-gray-400">• 2h ago</span>
+        
+        {loadingRequests ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
+          </div>
+        ) : error ? (
+          <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl text-sm">
+            Error loading requests: {error}
+          </div>
+        ) : pendingRequests.length === 0 ? (
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">inbox</span>
+            <p className="text-sm">No pending requests</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {pendingRequests.map((request) => (
+              <div
+                key={request.id}
+                className="flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/20 rounded-full size-12 shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary">
+                      {getRoleIcon(request.role)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="font-bold text-sm line-clamp-1">
+                      {request.role === "VENDOR" 
+                        ? request.businessName || request.email
+                        : request.fullName || request.email}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-[10px] font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide">
+                        {getRoleLabel(request.role)}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        • {getTimeAgo(request.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    className="flex items-center justify-center size-9 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 transition hover:bg-red-200"
+                    onClick={() => {/* TODO: implement reject */}}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "20px" }}
+                    >
+                      close
+                    </span>
+                  </button>
+                  <button 
+                    className="flex items-center justify-center size-9 rounded-full bg-primary text-black shadow-lg shadow-primary/20 transition hover:brightness-110"
+                    onClick={() => {/* TODO: implement approve */}}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "20px" }}
+                    >
+                      check
+                    </span>
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="flex items-center justify-center size-9 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 transition hover:bg-red-200">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "20px" }}
-                >
-                  close
-                </span>
-              </button>
-              <button className="flex items-center justify-center size-9 rounded-full bg-primary text-black shadow-lg shadow-primary/20 transition hover:brightness-110">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "20px" }}
-                >
-                  check
-                </span>
-              </button>
-            </div>
+            ))}
           </div>
-
-          {/* List Item 2 */}
-          <div className="flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/20 rounded-full size-12 shrink-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">
-                  person
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold text-sm line-clamp-1">Sarah Jenkins</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-[10px] font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide">
-                    Planner
-                  </span>
-                  <span className="text-xs text-gray-400">• 5h ago</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="flex items-center justify-center size-9 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 transition hover:bg-red-200">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "20px" }}
-                >
-                  close
-                </span>
-              </button>
-              <button className="flex items-center justify-center size-9 rounded-full bg-primary text-black shadow-lg shadow-primary/20 transition hover:brightness-110">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "20px" }}
-                >
-                  check
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Upcoming Schedule */}
