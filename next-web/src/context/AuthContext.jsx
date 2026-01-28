@@ -1,7 +1,15 @@
 "use client";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Api } from "@/lib/api";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
+import { Api, setAuthErrorHandler } from "@/lib/api";
 import { mockLogin, isMockAuthEnabled } from "@/lib/mockAuth";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext(null);
 
@@ -9,17 +17,63 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
+  // Handle logout and cleanup
+  const logout = useMemo(() => {
+    return (redirectToLogin = true) => {
+      setToken(null);
+      setUser(null);
+      globalThis?.localStorage?.removeItem("auth");
+      if (redirectToLogin && typeof window !== "undefined") {
+        router.push("/login");
+      }
+    };
+  }, [router]);
+
+  // Setup global auth error handler
   useEffect(() => {
-    const saved = globalThis?.localStorage?.getItem("auth");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setToken(parsed.token || null);
-        setUser(parsed.user || null);
-      } catch {}
+    setAuthErrorHandler((error) => {
+      console.error("Authentication error detected:", error);
+      logout(true); // This will clear auth and redirect to login
+    });
+  }, [logout]);
+
+  // Validate token on mount by fetching user profile
+  useEffect(() => {
+    async function validateToken() {
+      const saved = globalThis?.localStorage?.getItem("auth");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const savedToken = parsed.token;
+          const savedUser = parsed.user;
+
+          if (savedToken) {
+            // Validate token with backend
+            try {
+              const userData = await Api.fetchUserProfile(savedToken);
+              setToken(savedToken);
+              setUser(userData);
+            } catch (err) {
+              // Token is invalid or expired, clear auth
+              console.error("Token validation failed:", err);
+              setToken(null);
+              setUser(null);
+              globalThis?.localStorage?.removeItem("auth");
+            }
+          } else {
+            setToken(savedToken || null);
+            setUser(savedUser || null);
+          }
+        } catch (err) {
+          console.error("Error parsing auth from localStorage:", err);
+        }
+      }
+      setLoading(false);
     }
-    setLoading(false);
+
+    validateToken();
   }, []);
 
   useEffect(() => {
@@ -29,7 +83,7 @@ export function AuthProvider({ children }) {
     }
   }, [token, user, loading]);
 
-  async function login(username, password) {
+  const login = useCallback(async (username, password) => {
     // Use mock auth in development or when explicitly enabled
     if (isMockAuthEnabled()) {
       const data = await mockLogin(username, password);
@@ -44,9 +98,10 @@ export function AuthProvider({ children }) {
     setToken(token);
 
     // Fetch user profile with token to get user data including canComplete flag
+    let userData = null;
     if (token) {
       try {
-        const userData = await Api.fetchUserProfile(token);
+        userData = await Api.fetchUserProfile(token);
         setUser(userData || null);
       } catch (err) {
         console.error("Failed to fetch user profile:", err);
@@ -54,18 +109,12 @@ export function AuthProvider({ children }) {
       }
     }
 
-    return { token, user };
-  }
-
-  function logout() {
-    setToken(null);
-    setUser(null);
-    globalThis?.localStorage?.removeItem("auth");
-  }
+    return { token, user: userData };
+  }, []);
 
   const value = useMemo(
     () => ({ token, user, loading, login, logout }),
-    [token, user, loading]
+    [token, user, loading, login, logout],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
