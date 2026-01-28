@@ -2,6 +2,7 @@
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 
 export default function AdminPage() {
@@ -9,6 +10,8 @@ export default function AdminPage() {
     allowedRoles: ["ADMIN", "SUPER_ADMIN"],
   });
   const { token } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [error, setError] = useState(null);
@@ -322,7 +325,10 @@ export default function AdminPage() {
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-6 inset-x-4 z-40 bg-surface-light/80 dark:bg-[#1a1a12]/80 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-full shadow-2xl h-16 flex items-center justify-around px-2">
-        <button className="flex flex-col items-center justify-center gap-1 w-14 h-full group">
+        <button
+          onClick={() => router.push("/admin")}
+          className="flex flex-col items-center justify-center gap-1 w-14 h-full group"
+        >
           <span
             className="material-symbols-outlined text-black dark:text-primary transition-colors duration-300"
             style={{ fontSize: "24px" }}
@@ -331,7 +337,10 @@ export default function AdminPage() {
           </span>
           <span className="size-1 rounded-full bg-black dark:bg-primary opacity-100 group-hover:opacity-100 transition-opacity"></span>
         </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-14 h-full group">
+        <button
+          onClick={() => router.push("/admin/calendar")}
+          className="flex flex-col items-center justify-center gap-1 w-14 h-full group"
+        >
           <span
             className="material-symbols-outlined text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white transition-colors duration-300"
             style={{ fontSize: "24px" }}
@@ -340,7 +349,10 @@ export default function AdminPage() {
           </span>
           <span className="size-1 rounded-full bg-black dark:bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>
         </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-14 h-full group">
+        <button
+          onClick={() => router.push("/profile")}
+          className="flex flex-col items-center justify-center gap-1 w-14 h-full group"
+        >
           <span
             className="material-symbols-outlined text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white transition-colors duration-300"
             style={{ fontSize: "24px" }}
@@ -349,7 +361,10 @@ export default function AdminPage() {
           </span>
           <span className="size-1 rounded-full bg-black dark:bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>
         </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-14 h-full group">
+        <button
+          onClick={() => router.push("/admin/settings")}
+          className="flex flex-col items-center justify-center gap-1 w-14 h-full group"
+        >
           <div className="relative">
             <span
               className="material-symbols-outlined text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white transition-colors duration-300"
