@@ -73,6 +73,38 @@ export default function AdminPage() {
     return role === "VENDOR" ? "Vendor" : "Planner";
   };
 
+  const getDisplayName = () => {
+    if (!user) return "User";
+
+    // If name exists, use it with first letter of surname
+    if (user.name) {
+      const nameParts = user.name.trim().split(" ");
+      if (nameParts.length > 1) {
+        const firstName = nameParts[0];
+        const surnameInitial = nameParts[nameParts.length - 1].charAt(0);
+        return `${firstName} ${surnameInitial}.`;
+      }
+      return user.name;
+    }
+
+    // Fallback to username
+    return user.username || "User";
+  };
+
+  const getInitials = () => {
+    if (!user) return "U";
+
+    if (user.name) {
+      const nameParts = user.name.trim().split(" ");
+      if (nameParts.length > 1) {
+        return nameParts[0].charAt(0) + nameParts[1].charAt(0);
+      }
+      return nameParts[0].charAt(0);
+    }
+
+    return user.username ? user.username.charAt(0).toUpperCase() : "U";
+  };
+
   if (loading) {
     return (
       <div className="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center">
@@ -88,7 +120,23 @@ export default function AdminPage() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#1c1c0d] dark:text-[#f2f2e6] font-display antialiased overflow-x-hidden selection:bg-primary selection:text-black pb-28 min-h-screen">
-      {/* Header removed for cleaner UI */}
+      {/* Header with Profile */}
+      <header className="px-6 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Welcome back
+            </p>
+            <h1 className="text-2xl font-bold">{getDisplayName()}</h1>
+          </div>
+          <button
+            onClick={() => router.push("/profile")}
+            className="flex items-center justify-center size-12 rounded-full bg-primary text-black font-bold text-lg hover:brightness-110 transition-all active:scale-95"
+          >
+            {getInitials()}
+          </button>
+        </div>
+      </header>
 
       {/* Stats Section (Horizontal Scroll) */}
       <section className="mt-2 pl-6 overflow-hidden">
@@ -350,7 +398,7 @@ export default function AdminPage() {
           <span className="size-1 rounded-full bg-black dark:bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>
         </button>
         <button
-          onClick={() => router.push("/profile")}
+          onClick={() => router.push("/admin/users")}
           className="flex flex-col items-center justify-center gap-1 w-14 h-full group"
         >
           <span
