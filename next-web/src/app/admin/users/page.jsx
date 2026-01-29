@@ -10,19 +10,27 @@ export default function AdminUsersPage() {
   });
   const { token } = useAuth();
   const router = useRouter();
-  const [userData, setUserData] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchUserData() {
-      if (!token) return;
+    async function fetchAdminUsers() {
+      if (!token || !user) return;
 
       try {
-        setLoadingUser(true);
+        setLoadingUsers(true);
         const baseUrl =
           process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
-        const response = await fetch(`${baseUrl}/api/auth/me`, {
+
+        // SUPER_ADMIN can view superadmin, admin, planners, vendors
+        // ADMIN can only see admins, planners, and vendors
+        const endpoint =
+          user.role === "SUPER_ADMIN"
+            ? `${baseUrl}/api/admins/users`
+            : `${baseUrl}/api/admins/users`;
+
+        const response = await fetch(endpoint, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,17 +42,20 @@ export default function AdminUsersPage() {
         }
 
         const data = await response.json();
-        setUserData(data);
+        console.log("Admin users response:", data);
+        console.log("Current user role:", user.role);
+        // Extract content array from paginated response
+        setAdminUsers(data.content || data || []);
       } catch (err) {
-        console.error("Error fetching user data:", err);
+        console.error("Error fetching admin users:", err);
         setError(err.message);
       } finally {
-        setLoadingUser(false);
+        setLoadingUsers(false);
       }
     }
 
-    fetchUserData();
-  }, [token]);
+    fetchAdminUsers();
+  }, [token, user]);
 
   if (loading) {
     return (
@@ -69,87 +80,61 @@ export default function AdminUsersPage() {
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h1 className="text-2xl font-bold">User Profile</h1>
+        <h1 className="text-2xl font-bold">
+          {user.role === "SUPER_ADMIN" ? "All Users" : "Users"}
+        </h1>
       </div>
 
       <main className="px-6 space-y-6">
-        {loadingUser ? (
+        {loadingUsers ? (
           <div className="flex items-center justify-center py-12">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
           </div>
         ) : error ? (
           <div className="p-4 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl text-sm">
-            Error loading user data: {error}
+            Error loading users: {error}
           </div>
-        ) : userData ? (
-          <>
-            {/* Profile Card */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-white/5 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold">
-                    {userData.name || userData.username || "User"}
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {userData.email}
-                  </p>
+        ) : adminUsers.length > 0 ? (
+          <div className="space-y-3">
+            {adminUsers.map((admin) => (
+              <div
+                key={admin.id}
+                className="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 border border-gray-100 dark:border-white/5"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/20 rounded-full size-14 shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-2xl">
+                      admin_panel_settings
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-lg">
+                        {admin.name || admin.username || "Admin"}
+                      </h3>
+                      <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wide">
+                        {admin.role}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {admin.email}
+                    </p>
+                    {admin.username && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        @{admin.username}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wide">
-                  {userData.role}
-                </span>
               </div>
-            </div>
-
-            {/* User Details */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-bold">Details</h3>
-              <div className="bg-surface-light dark:bg-surface-dark rounded-2xl divide-y divide-gray-100 dark:divide-white/5 border border-gray-100 dark:border-white/5">
-                {userData.username && (
-                  <div className="flex justify-between items-center p-4">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Username
-                    </span>
-                    <span className="font-medium">{userData.username}</span>
-                  </div>
-                )}
-                {userData.email && (
-                  <div className="flex justify-between items-center p-4">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Email
-                    </span>
-                    <span className="font-medium">{userData.email}</span>
-                  </div>
-                )}
-                {userData.role && (
-                  <div className="flex justify-between items-center p-4">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Role
-                    </span>
-                    <span className="font-medium">{userData.role}</span>
-                  </div>
-                )}
-                {userData.id && (
-                  <div className="flex justify-between items-center p-4">
-                    <span className="text-gray-600 dark:text-gray-400">ID</span>
-                    <span className="font-medium text-sm">{userData.id}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Raw Data */}
-            {Object.keys(userData).length > 0 && (
-              <details className="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 border border-gray-100 dark:border-white/5">
-                <summary className="font-bold cursor-pointer">All Data</summary>
-                <pre className="mt-4 text-xs overflow-auto bg-black/5 dark:bg-white/5 p-3 rounded text-gray-600 dark:text-gray-400">
-                  {JSON.stringify(userData, null, 2)}
-                </pre>
-              </details>
-            )}
-          </>
+            ))}
+          </div>
         ) : (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            <p className="text-sm">No user data available</p>
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">
+              group_off
+            </span>
+            <p className="text-sm">No users found</p>
           </div>
         )}
       </main>
