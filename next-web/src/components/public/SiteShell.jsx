@@ -1,0 +1,93 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/about-services", label: "About/Services" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/contact", label: "Contact" },
+  { href: "/chat", label: "Chat" },
+];
+
+function isActive(pathname, href) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export default function SiteShell({ children }) {
+  const pathname = usePathname();
+
+  return (
+    <div className="site-bg min-h-dvh text-foreground">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/85 backdrop-blur-lg">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="inline-flex size-8 items-center justify-center rounded-full border border-saffron/40 bg-saffron/10 text-sm font-bold text-saffron">
+              SG
+            </span>
+            <span className="font-heading text-lg tracking-wide text-white">
+              Saffron Gardens
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary">
+            {navItems.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`rounded-full px-3 py-2 text-sm transition ${
+                    active
+                      ? "bg-saffron text-ink"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-8 sm:px-6 md:pb-10">
+        {children}
+      </main>
+
+      <footer className="border-t border-white/10 bg-ink/80 px-4 py-8 sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
+          <p>Curated event spaces for unforgettable celebrations.</p>
+          <p>© {new Date().getFullYear()} Saffron Gardens</p>
+        </div>
+      </footer>
+
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-ink/95 px-2 py-2 backdrop-blur md:hidden"
+      >
+        <ul className="grid grid-cols-5 gap-1">
+          {navItems.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`block rounded-lg px-2 py-2 text-center text-xs transition ${
+                    active
+                      ? "bg-saffron text-ink"
+                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+}
