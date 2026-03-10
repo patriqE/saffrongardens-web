@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
@@ -33,9 +33,7 @@ function normalizeMessagesPayload(payload) {
   const size = Number.isInteger(payload?.size) ? payload.size : PAGE_SIZE;
 
   const hasPrev =
-    typeof payload?.first === "boolean"
-      ? !payload.first
-      : page > 0;
+    typeof payload?.first === "boolean" ? !payload.first : page > 0;
 
   const hasNext =
     typeof payload?.last === "boolean"
@@ -75,6 +73,14 @@ function extractMessageSender(message) {
   );
 }
 
+function normalizeUnreadCount(payload) {
+  if (typeof payload === "number") return payload;
+  if (Number.isInteger(payload?.unreadCount)) return payload.unreadCount;
+  if (Number.isInteger(payload?.count)) return payload.count;
+  if (Number.isInteger(payload?.unread)) return payload.unread;
+  return 0;
+}
+
 export default function ChatPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -91,6 +97,8 @@ export default function ChatPage() {
   const [historyPage, setHistoryPage] = useState(0);
   const [hasPrevPage, setHasPrevPage] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadLoading, setUnreadLoading] = useState(false);
 
   const canSubmit = useMemo(
     () => Boolean(email.trim() && name.trim()) && !submitting,
@@ -113,12 +121,65 @@ export default function ChatPage() {
     }
   }, []);
 
+  const fetchUnreadCount = useCallback(
+    async ({ silent = true } = {}) => {
+      if (!conversationId) {
+        setUnreadCount(0);
+        return;
+      }
+
+      if (!silent) setUnreadLoading(true);
+
+      try {
+        const res = await fetch(
+          `/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`,
+          { cache: "no-store" },
+        );
+
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = text || null;
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            data?.error || data?.message || "Failed to load unread count",
+          );
+        }
+
+        setUnreadCount(Math.max(0, normalizeUnreadCount(data)));
+      } catch (err) {
+        if (!silent) {
+          setError(err?.message || "Unable to load unread count");
+        }
+      } finally {
+        if (!silent) setUnreadLoading(false);
+      }
+    },
+    [conversationId],
+  );
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    fetchUnreadCount({ silent: true });
+    const intervalId = window.setInterval(() => {
+      fetchUnreadCount({ silent: true });
+    }, 10000);
+
+    return () => window.clearInterval(intervalId);
+  }, [conversationId, fetchUnreadCount]);
+
   useEffect(() => {
     const fetchHistory = async () => {
       if (!conversationId) {
         setMessages([]);
         setHasPrevPage(false);
         setHasNextPage(false);
+        setUnreadCount(0);
         return;
       }
 
@@ -138,13 +199,16 @@ export default function ChatPage() {
         }
 
         if (!res.ok) {
-          throw new Error(data?.error || data?.message || "Failed to load history");
+          throw new Error(
+            data?.error || data?.message || "Failed to load history",
+          );
         }
 
         const normalized = normalizeMessagesPayload(data);
         setMessages(normalized.items);
         setHasPrevPage(normalized.hasPrev);
         setHasNextPage(normalized.hasNext);
+        fetchUnreadCount({ silent: true });
       } catch (err) {
         setError(err?.message || "Unable to load conversation history");
       } finally {
@@ -153,7 +217,7 @@ export default function ChatPage() {
     };
 
     fetchHistory();
-  }, [conversationId, historyPage]);
+  }, [conversationId, historyPage, fetchUnreadCount]);
 
   const onStartChat = async (event) => {
     event.preventDefault();
@@ -195,6 +259,7 @@ export default function ChatPage() {
       setAssignmentStatus(nextAssignmentStatus);
       setResponseMessage(nextResponseMessage);
       setHistoryPage(0);
+      setUnreadCount(0);
 
       window.localStorage.setItem(
         STORAGE_KEY,
@@ -248,7 +313,9 @@ export default function ChatPage() {
       }
 
       if (!res.ok) {
-        throw new Error(data?.error || data?.message || "Failed to send message");
+        throw new Error(
+          data?.error || data?.message || "Failed to send message",
+        );
       }
 
       setChatMessage("");
@@ -258,6 +325,7 @@ export default function ChatPage() {
 
       // Refresh first page to reflect latest thread activity.
       setHistoryPage(0);
+      fetchUnreadCount({ silent: true });
     } catch (err) {
       setError(err?.message || "Unable to send message");
     } finally {
@@ -354,7 +422,20 @@ export default function ChatPage() {
 
       {conversationId && (
         <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 className="font-heading text-2xl text-white">Conversation</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-heading text-2xl text-white">Conversation</h2>
+            <button
+              type="button"
+              onClick={() => fetchUnreadCount({ silent: false })}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-white/80"
+            >
+              <span>Unread</span>
+              <span className="rounded-full bg-saffron px-2 py-0.5 text-ink">
+                {unreadCount}
+              </span>
+              {unreadLoading && <span className="text-white/60">...</span>}
+            </button>
+          </div>
 
           <form className="mt-4 space-y-3" onSubmit={onSendMessage}>
             <label className="block space-y-2">
@@ -401,8 +482,12 @@ export default function ChatPage() {
                       key={key}
                       className="rounded-xl border border-white/10 bg-ink/60 p-3"
                     >
-                      <p className="text-xs text-saffron">{extractMessageSender(item)}</p>
-                      <p className="mt-1 text-sm text-white/90">{extractMessageBody(item)}</p>
+                      <p className="text-xs text-saffron">
+                        {extractMessageSender(item)}
+                      </p>
+                      <p className="mt-1 text-sm text-white/90">
+                        {extractMessageBody(item)}
+                      </p>
                       <p className="mt-1 text-xs text-white/50">
                         {formatMessageTime(
                           item?.createdAt || item?.timestamp || item?.sentAt,
