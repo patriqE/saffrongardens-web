@@ -47,7 +47,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           email: email.trim(),
           name: name.trim(),
-          preferredPlannerUsername: preferredPlannerUsername.trim() || undefined,
+          preferredPlannerUsername:
+            preferredPlannerUsername.trim() || undefined,
         }),
       });
 
@@ -104,8 +105,8 @@ export default function ChatPage() {
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
         <form className="space-y-4" onSubmit={onStartChat}>
           <div className="rounded-2xl bg-ink/70 p-4 text-sm text-white/80">
-            Provide your contact details to begin a conversation and get assigned
-            to a planner.
+            Provide your contact details to begin a conversation and get
+            assigned to a planner.
           </div>
 
           <label className="block space-y-2">
@@ -133,7 +134,9 @@ export default function ChatPage() {
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm text-white/80">Preferred Planner Username (Optional)</span>
+            <span className="text-sm text-white/80">
+              Preferred Planner Username (Optional)
+            </span>
             <input
               type="text"
               value={preferredPlannerUsername}
@@ -146,12 +149,16 @@ export default function ChatPage() {
           {conversationId && (
             <div className="rounded-xl border border-saffron/40 bg-saffron/10 p-4 text-sm text-white/90">
               <p>
-                <span className="font-semibold text-saffron">Conversation ID:</span>{" "}
+                <span className="font-semibold text-saffron">
+                  Conversation ID:
+                </span>{" "}
                 <span className="break-all">{conversationId}</span>
               </p>
               {assignmentStatus && (
                 <p className="mt-2">
-                  <span className="font-semibold text-saffron">Assignment Status:</span>{" "}
+                  <span className="font-semibold text-saffron">
+                    Assignment Status:
+                  </span>{" "}
                   {assignmentStatus}
                 </p>
               )}
