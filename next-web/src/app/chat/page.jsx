@@ -6,6 +6,7 @@ const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const POLL_INTERVAL_MS = 10_000;
 
 function normalizeMessagesPayload(payload) {
   if (Array.isArray(payload)) {
@@ -91,6 +92,16 @@ function safeJson(value) {
   } catch {
     return value;
   }
+}
+
+function getMessageId(message) {
+  return (
+    message?.id ??
+    message?.messageId ??
+    message?.uuid ??
+    message?.message_id ??
+    null
+  );
 }
 
 function extractRealtimeConversationState(payload) {
@@ -232,6 +243,8 @@ export default function ChatPage() {
   const [unreadLoading, setUnreadLoading] = useState(false);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const stompClientRef = useRef(null);
+  const seenMessageIdsRef = useRef(new Set());
+  const prevRealtimeConnectedRef = useRef(false);
 
   const canSubmit = useMemo(
     () => Boolean(email.trim() && name.trim()) && !submitting,
@@ -370,12 +383,13 @@ export default function ChatPage() {
   );
 
   const loadConversationHistory = useCallback(
-    async ({ page = historyPage, silent = false } = {}) => {
+    async ({ page = historyPage, silent = false, merge = false } = {}) => {
       if (!conversationId) {
         setMessages([]);
         setHasPrevPage(false);
         setHasNextPage(false);
         setUnreadCount(0);
+        seenMessageIdsRef.current = new Set();
         return;
       }
 
@@ -399,7 +413,36 @@ export default function ChatPage() {
         }
 
         const normalized = normalizeMessagesPayload(data);
-        setMessages(normalized.items);
+
+        if (merge) {
+          // Deduped append — only add messages whose IDs haven't been seen yet.
+          setMessages((prev) => {
+            const seen = seenMessageIdsRef.current;
+            const toAdd = [];
+
+            for (const msg of normalized.items) {
+              const msgId = getMessageId(msg);
+              if (msgId !== null) {
+                if (!seen.has(msgId)) {
+                  seen.add(msgId);
+                  toAdd.push(msg);
+                }
+              } else {
+                // No stable ID — always include to avoid silent message loss.
+                toAdd.push(msg);
+              }
+            }
+
+            return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+          });
+        } else {
+          // Full replace — re-seed the seen-ID set from this page.
+          seenMessageIdsRef.current = new Set(
+            normalized.items.map(getMessageId).filter(Boolean),
+          );
+          setMessages(normalized.items);
+        }
+
         setHasPrevPage(normalized.hasPrev);
         setHasNextPage(normalized.hasNext);
         fetchUnreadCount({ silent: true });
@@ -432,14 +475,37 @@ export default function ChatPage() {
   }, [loadConversationHistory]);
 
   useEffect(() => {
+    // Track the previous connected state so we can detect a WS drop.
+    const wasConnected = prevRealtimeConnectedRef.current;
+    prevRealtimeConnectedRef.current = realtimeConnected;
+
     if (!conversationId || realtimeConnected) return;
 
+    // WS just dropped — immediately resync to avoid a gap of up to POLL_INTERVAL_MS.
+    if (wasConnected) {
+      loadConversationHistory({
+        page: historyPage,
+        silent: true,
+        merge: false,
+      });
+      fetchUnreadCount({ silent: true });
+    }
+
+    // Ongoing polling: deduped append so messages received via WS before the
+    // drop are never lost or duplicated when the poll returns the same page.
     const intervalId = window.setInterval(() => {
-      loadConversationHistory({ page: historyPage, silent: true });
-    }, 10000);
+      loadConversationHistory({ page: historyPage, silent: true, merge: true });
+      fetchUnreadCount({ silent: true });
+    }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
-  }, [conversationId, historyPage, loadConversationHistory, realtimeConnected]);
+  }, [
+    conversationId,
+    fetchUnreadCount,
+    historyPage,
+    loadConversationHistory,
+    realtimeConnected,
+  ]);
 
   useEffect(() => {
     if (!conversationId) {
