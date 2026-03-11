@@ -145,7 +145,9 @@ function createStoredPlanner(username) {
 }
 
 function getAssignmentStatusDetails(status, preferredPlannerUsername) {
-  const normalizedStatus = String(status || "").trim().toUpperCase();
+  const normalizedStatus = String(status || "")
+    .trim()
+    .toUpperCase();
   const selectedPlannerHandle = preferredPlannerUsername?.trim()
     ? `@${preferredPlannerUsername.trim()}`
     : "your selected planner";
@@ -169,7 +171,8 @@ function getAssignmentStatusDetails(status, preferredPlannerUsername) {
     case "AUTO_ASSIGNED":
       return {
         label: "Planner Assigned",
-        message: "A planner has been assigned automatically to keep your chat moving.",
+        message:
+          "A planner has been assigned automatically to keep your chat moving.",
       };
     case "OPEN":
       return {
@@ -714,7 +717,9 @@ export default function ChatPage() {
               {responseMessage &&
                 assignmentStatus &&
                 responseMessage !== assignmentStatusDetails.message && (
-                  <p className="mt-2 text-xs text-white/60">{responseMessage}</p>
+                  <p className="mt-2 text-xs text-white/60">
+                    {responseMessage}
+                  </p>
                 )}
               {conversationId && !assignmentStatus && !responseMessage && (
                 <p className="mt-2 text-white/80">
