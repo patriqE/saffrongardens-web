@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 function normalizeMessagesPayload(payload) {
   if (Array.isArray(payload)) {
@@ -79,6 +81,24 @@ function normalizeUnreadCount(payload) {
   if (Number.isInteger(payload?.count)) return payload.count;
   if (Number.isInteger(payload?.unread)) return payload.unread;
   return 0;
+}
+
+function safeJson(value) {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function extractRealtimeConversationState(payload) {
+  return {
+    assignmentStatus:
+      payload?.assignmentStatus || payload?.assignment_status || "",
+    responseMessage: payload?.responseMessage || payload?.message || "",
+  };
 }
 
 function normalizePlannerResults(payload) {
@@ -210,6 +230,8 @@ export default function ChatPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadLoading, setUnreadLoading] = useState(false);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const stompClientRef = useRef(null);
 
   const canSubmit = useMemo(
     () => Boolean(email.trim() && name.trim()) && !submitting,
@@ -347,19 +369,8 @@ export default function ChatPage() {
     [conversationId],
   );
 
-  useEffect(() => {
-    if (!conversationId) return;
-
-    fetchUnreadCount({ silent: true });
-    const intervalId = window.setInterval(() => {
-      fetchUnreadCount({ silent: true });
-    }, 10000);
-
-    return () => window.clearInterval(intervalId);
-  }, [conversationId, fetchUnreadCount]);
-
-  useEffect(() => {
-    const fetchHistory = async () => {
+  const loadConversationHistory = useCallback(
+    async ({ page = historyPage, silent = false } = {}) => {
       if (!conversationId) {
         setMessages([]);
         setHasPrevPage(false);
@@ -368,20 +379,18 @@ export default function ChatPage() {
         return;
       }
 
-      setHistoryLoading(true);
-      setError("");
+      if (!silent) {
+        setHistoryLoading(true);
+        setError("");
+      }
+
       try {
         const res = await fetch(
-          `/api/public/chat/${encodeURIComponent(conversationId)}/messages?page=${historyPage}&size=${PAGE_SIZE}`,
+          `/api/public/chat/${encodeURIComponent(conversationId)}/messages?page=${page}&size=${PAGE_SIZE}`,
           { cache: "no-store" },
         );
         const text = await res.text();
-        let data = null;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch {
-          data = text || null;
-        }
+        const data = text ? safeJson(text) : null;
 
         if (!res.ok) {
           throw new Error(
@@ -395,14 +404,165 @@ export default function ChatPage() {
         setHasNextPage(normalized.hasNext);
         fetchUnreadCount({ silent: true });
       } catch (err) {
-        setError(err?.message || "Unable to load conversation history");
+        if (!silent) {
+          setError(err?.message || "Unable to load conversation history");
+        }
       } finally {
-        setHistoryLoading(false);
+        if (!silent) {
+          setHistoryLoading(false);
+        }
+      }
+    },
+    [conversationId, historyPage, fetchUnreadCount],
+  );
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    fetchUnreadCount({ silent: true });
+    const intervalId = window.setInterval(() => {
+      fetchUnreadCount({ silent: true });
+    }, 10000);
+
+    return () => window.clearInterval(intervalId);
+  }, [conversationId, fetchUnreadCount]);
+
+  useEffect(() => {
+    loadConversationHistory();
+  }, [loadConversationHistory]);
+
+  useEffect(() => {
+    if (!conversationId || realtimeConnected) return;
+
+    const intervalId = window.setInterval(() => {
+      loadConversationHistory({ page: historyPage, silent: true });
+    }, 10000);
+
+    return () => window.clearInterval(intervalId);
+  }, [conversationId, historyPage, loadConversationHistory, realtimeConnected]);
+
+  useEffect(() => {
+    if (!conversationId) {
+      setRealtimeConnected(false);
+      return;
+    }
+
+    let disposed = false;
+
+    const connectRealtime = async () => {
+      try {
+        const [{ Client }, sockJsModule] = await Promise.all([
+          import("@stomp/stompjs"),
+          import("sockjs-client"),
+        ]);
+
+        if (disposed) return;
+
+        const SockJS = sockJsModule.default;
+        const client = new Client({
+          reconnectDelay: 5000,
+          debug: () => {},
+          webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws-chat`),
+          onConnect: () => {
+            if (disposed) return;
+
+            setRealtimeConnected(true);
+
+            client.subscribe(
+              `/topic/conversations/${conversationId}`,
+              (frame) => {
+                const payload = safeJson(frame.body);
+                const nextState = extractRealtimeConversationState(payload);
+
+                if (nextState.assignmentStatus) {
+                  setAssignmentStatus(nextState.assignmentStatus);
+                }
+
+                if (nextState.responseMessage) {
+                  setResponseMessage(nextState.responseMessage);
+                }
+
+                setHistoryPage(0);
+                loadConversationHistory({ page: 0, silent: true });
+              },
+            );
+
+            client.subscribe(
+              `/topic/conversations/${conversationId}/unread`,
+              (frame) => {
+                const payload = safeJson(frame.body);
+
+                if (payload == null || payload === "") {
+                  fetchUnreadCount({ silent: true });
+                  return;
+                }
+
+                setUnreadCount(Math.max(0, normalizeUnreadCount(payload)));
+              },
+            );
+          },
+          onDisconnect: () => {
+            if (!disposed) setRealtimeConnected(false);
+          },
+          onStompError: () => {
+            if (!disposed) setRealtimeConnected(false);
+          },
+          onWebSocketClose: () => {
+            if (!disposed) setRealtimeConnected(false);
+          },
+          onWebSocketError: () => {
+            if (!disposed) setRealtimeConnected(false);
+          },
+        });
+
+        stompClientRef.current = client;
+        client.activate();
+      } catch {
+        if (!disposed) {
+          setRealtimeConnected(false);
+        }
       }
     };
 
-    fetchHistory();
-  }, [conversationId, historyPage, fetchUnreadCount]);
+    connectRealtime();
+
+    return () => {
+      disposed = true;
+      setRealtimeConnected(false);
+      const client = stompClientRef.current;
+      stompClientRef.current = null;
+      if (client) {
+        client.deactivate();
+      }
+    };
+  }, [conversationId, fetchUnreadCount, loadConversationHistory]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          conversationId,
+          assignmentStatus,
+          responseMessage,
+          email: email.trim(),
+          name: name.trim(),
+          preferredPlannerUsername: preferredPlannerUsername.trim(),
+        }),
+      );
+    } catch {
+      // Ignore local storage persistence failures.
+    }
+  }, [
+    assignmentStatus,
+    conversationId,
+    email,
+    name,
+    preferredPlannerUsername,
+    responseMessage,
+  ]);
 
   const onStartChat = async (event) => {
     event.preventDefault();
@@ -744,7 +904,18 @@ export default function ChatPage() {
       {conversationId && (
         <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-heading text-2xl text-white">Conversation</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-heading text-2xl text-white">Conversation</h2>
+              <span
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${realtimeConnected ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" : "border-white/15 bg-white/5 text-white/65"}`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${realtimeConnected ? "bg-emerald-400" : "bg-white/35"}`}
+                  aria-hidden="true"
+                />
+                {realtimeConnected ? "Live updates" : "Polling fallback"}
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => fetchUnreadCount({ silent: false })}
