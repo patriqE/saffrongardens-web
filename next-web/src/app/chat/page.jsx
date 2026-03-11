@@ -144,6 +144,46 @@ function createStoredPlanner(username) {
   };
 }
 
+function getAssignmentStatusDetails(status, preferredPlannerUsername) {
+  const normalizedStatus = String(status || "").trim().toUpperCase();
+  const selectedPlannerHandle = preferredPlannerUsername?.trim()
+    ? `@${preferredPlannerUsername.trim()}`
+    : "your selected planner";
+
+  switch (normalizedStatus) {
+    case "PREFERRED_ASSIGNED":
+      return {
+        label: "Preferred Planner Assigned",
+        message: `${selectedPlannerHandle} has been assigned to your chat. You can start messaging now.`,
+      };
+    case "PREFERRED_PENDING":
+      return {
+        label: "Preferred Planner Pending",
+        message: `${selectedPlannerHandle} was requested, but has not accepted the chat yet.`,
+      };
+    case "PREFERRED_NOT_FOUND":
+      return {
+        label: "Preferred Planner Not Found",
+        message: `${selectedPlannerHandle} could not be found. Your chat remains open for assignment.`,
+      };
+    case "AUTO_ASSIGNED":
+      return {
+        label: "Planner Assigned",
+        message: "A planner has been assigned automatically to keep your chat moving.",
+      };
+    case "OPEN":
+      return {
+        label: "Open Queue",
+        message: "Your chat is open and waiting for an available planner.",
+      };
+    default:
+      return {
+        label: normalizedStatus || "Assignment Update",
+        message: "Your chat request has been received.",
+      };
+  }
+}
+
 export default function ChatPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -171,6 +211,15 @@ export default function ChatPage() {
   const canSubmit = useMemo(
     () => Boolean(email.trim() && name.trim()) && !submitting,
     [email, name, submitting],
+  );
+
+  const assignmentStatusDetails = useMemo(
+    () =>
+      getAssignmentStatusDetails(
+        assignmentStatus,
+        preferredPlannerUsername || selectedPlanner?.username,
+      ),
+    [assignmentStatus, preferredPlannerUsername, selectedPlanner],
   );
 
   useEffect(() => {
@@ -642,9 +691,9 @@ export default function ChatPage() {
               {assignmentStatus && (
                 <p className="mt-2">
                   <span className="font-semibold text-saffron">
-                    Assignment Status:
+                    Planner Status:
                   </span>{" "}
-                  {assignmentStatus}
+                  {assignmentStatusDetails.label}
                 </p>
               )}
               {preferredPlannerUsername && (
@@ -655,8 +704,22 @@ export default function ChatPage() {
                   @{preferredPlannerUsername}
                 </p>
               )}
-              {responseMessage && (
-                <p className="mt-2 text-white/80">{responseMessage}</p>
+              {(assignmentStatus || responseMessage) && (
+                <p className="mt-2 text-white/80">
+                  {assignmentStatus
+                    ? assignmentStatusDetails.message
+                    : responseMessage}
+                </p>
+              )}
+              {responseMessage &&
+                assignmentStatus &&
+                responseMessage !== assignmentStatusDetails.message && (
+                  <p className="mt-2 text-xs text-white/60">{responseMessage}</p>
+                )}
+              {conversationId && !assignmentStatus && !responseMessage && (
+                <p className="mt-2 text-white/80">
+                  {assignmentStatusDetails.message}
+                </p>
               )}
             </div>
           )}
