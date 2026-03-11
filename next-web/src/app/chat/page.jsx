@@ -81,10 +81,78 @@ function normalizeUnreadCount(payload) {
   return 0;
 }
 
+function normalizePlannerResults(payload) {
+  const candidates = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.content)
+      ? payload.content
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload?.planners)
+          ? payload.planners
+          : Array.isArray(payload?.results)
+            ? payload.results
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : [];
+
+  return candidates
+    .map((planner, index) => {
+      const username =
+        planner?.username ||
+        planner?.userName ||
+        planner?.plannerUsername ||
+        "";
+      const displayName =
+        planner?.displayName ||
+        planner?.fullName ||
+        planner?.name ||
+        planner?.plannerName ||
+        username;
+
+      const status = String(
+        planner?.status || planner?.presence || "",
+      ).toLowerCase();
+      const isOnline =
+        typeof planner?.isOnline === "boolean"
+          ? planner.isOnline
+          : typeof planner?.online === "boolean"
+            ? planner.online
+            : status === "online" || status === "active";
+
+      if (!username && !displayName) return null;
+
+      return {
+        id: planner?.id || username || `planner-${index}`,
+        username,
+        displayName,
+        isOnline,
+      };
+    })
+    .filter(Boolean);
+}
+
+function createStoredPlanner(username) {
+  const value = username?.trim();
+  if (!value) return null;
+
+  return {
+    id: value,
+    username: value,
+    displayName: value,
+    isOnline: false,
+  };
+}
+
 export default function ChatPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [preferredPlannerUsername, setPreferredPlannerUsername] = useState("");
+  const [plannerQuery, setPlannerQuery] = useState("");
+  const [selectedPlanner, setSelectedPlanner] = useState(null);
+  const [plannerResults, setPlannerResults] = useState([]);
+  const [plannerLoading, setPlannerLoading] = useState(false);
+  const [plannerSearchError, setPlannerSearchError] = useState("");
   const [conversationId, setConversationId] = useState("");
   const [assignmentStatus, setAssignmentStatus] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
@@ -115,11 +183,76 @@ export default function ChatPage() {
       setResponseMessage(parsed?.responseMessage || "");
       setEmail(parsed?.email || "");
       setName(parsed?.name || "");
-      setPreferredPlannerUsername(parsed?.preferredPlannerUsername || "");
+      const storedPlannerUsername = parsed?.preferredPlannerUsername || "";
+      setPreferredPlannerUsername(storedPlannerUsername);
+      setPlannerQuery(storedPlannerUsername);
+      setSelectedPlanner(createStoredPlanner(storedPlannerUsername));
     } catch {
       // Ignore malformed local storage payload.
     }
   }, []);
+
+  useEffect(() => {
+    if (conversationId) {
+      setPlannerResults([]);
+      setPlannerLoading(false);
+      setPlannerSearchError("");
+      return;
+    }
+
+    const query = plannerQuery.trim();
+    if (query.length < 2) {
+      setPlannerResults([]);
+      setPlannerLoading(false);
+      setPlannerSearchError("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setPlannerLoading(true);
+      setPlannerSearchError("");
+
+      try {
+        const res = await fetch(
+          `/api/public/chat/planners?q=${encodeURIComponent(query)}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = text || null;
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            data?.error || data?.message || "Failed to search planners",
+          );
+        }
+
+        setPlannerResults(normalizePlannerResults(data));
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+        setPlannerResults([]);
+        setPlannerSearchError(err?.message || "Unable to search planners");
+      } finally {
+        if (!controller.signal.aborted) {
+          setPlannerLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [conversationId, plannerQuery]);
 
   const fetchUnreadCount = useCallback(
     async ({ silent = true } = {}) => {
@@ -279,6 +412,33 @@ export default function ChatPage() {
     }
   };
 
+  const onPlannerQueryChange = (event) => {
+    const value = event.target.value;
+    setPlannerQuery(value);
+    setPlannerSearchError("");
+
+    if (value.trim() !== preferredPlannerUsername) {
+      setPreferredPlannerUsername("");
+      setSelectedPlanner(null);
+    }
+  };
+
+  const onPlannerSelect = (planner) => {
+    setSelectedPlanner(planner);
+    setPreferredPlannerUsername(planner.username);
+    setPlannerQuery(planner.displayName || planner.username);
+    setPlannerResults([]);
+    setPlannerSearchError("");
+  };
+
+  const clearPlannerSelection = () => {
+    setSelectedPlanner(null);
+    setPreferredPlannerUsername("");
+    setPlannerQuery("");
+    setPlannerResults([]);
+    setPlannerSearchError("");
+  };
+
   const onSendMessage = async (event) => {
     event.preventDefault();
 
@@ -375,16 +535,101 @@ export default function ChatPage() {
 
           <label className="block space-y-2">
             <span className="text-sm text-white/80">
-              Preferred Planner Username (Optional)
+              Choose Planner (Optional)
             </span>
             <input
               type="text"
-              value={preferredPlannerUsername}
-              onChange={(e) => setPreferredPlannerUsername(e.target.value)}
+              value={plannerQuery}
+              onChange={onPlannerQueryChange}
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
-              placeholder="e.g. planner.jane"
+              placeholder="Search by username or display name"
+              autoComplete="off"
+              aria-describedby="planner-search-help"
             />
+            <p id="planner-search-help" className="text-xs text-white/55">
+              Search planners before starting the chat. Selected planner
+              usernames are sent with the chat request.
+            </p>
           </label>
+
+          {selectedPlanner && (
+            <div className="rounded-2xl border border-white/10 bg-ink/60 p-4 text-sm text-white/85">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-white">
+                    {selectedPlanner.displayName}
+                  </p>
+                  <p className="text-xs text-white/60">
+                    @{selectedPlanner.username}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearPlannerSelection}
+                  className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-white/75"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/75">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${selectedPlanner.isOnline ? "bg-emerald-400" : "bg-white/30"}`}
+                  aria-hidden="true"
+                />
+                <span>{selectedPlanner.isOnline ? "Online" : "Offline"}</span>
+              </div>
+            </div>
+          )}
+
+          {!selectedPlanner && plannerQuery.trim().length >= 2 && (
+            <div className="rounded-2xl border border-white/10 bg-ink/60 p-3">
+              {plannerLoading && (
+                <p className="text-sm text-white/70">Searching planners...</p>
+              )}
+
+              {!plannerLoading && plannerSearchError && (
+                <p className="text-sm text-red-400">{plannerSearchError}</p>
+              )}
+
+              {!plannerLoading &&
+                !plannerSearchError &&
+                plannerResults.length === 0 && (
+                  <p className="text-sm text-white/70">
+                    No planners matched that search.
+                  </p>
+                )}
+
+              {!plannerLoading && plannerResults.length > 0 && (
+                <ul className="space-y-2">
+                  {plannerResults.map((planner) => (
+                    <li key={planner.id}>
+                      <button
+                        type="button"
+                        onClick={() => onPlannerSelect(planner)}
+                        className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-saffron/40 hover:bg-white/10"
+                      >
+                        <span>
+                          <span className="block text-sm font-semibold text-white">
+                            {planner.displayName}
+                          </span>
+                          <span className="block text-xs text-white/60">
+                            @{planner.username}
+                          </span>
+                        </span>
+                        <span className="inline-flex items-center gap-2 text-xs text-white/70">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${planner.isOnline ? "bg-emerald-400" : "bg-white/30"}`}
+                            aria-hidden="true"
+                          />
+                          <span>{planner.isOnline ? "Online" : "Offline"}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {conversationId && (
             <div className="rounded-xl border border-saffron/40 bg-saffron/10 p-4 text-sm text-white/90">
@@ -400,6 +645,14 @@ export default function ChatPage() {
                     Assignment Status:
                   </span>{" "}
                   {assignmentStatus}
+                </p>
+              )}
+              {preferredPlannerUsername && (
+                <p className="mt-2">
+                  <span className="font-semibold text-saffron">
+                    Selected Planner:
+                  </span>{" "}
+                  @{preferredPlannerUsername}
                 </p>
               )}
               {responseMessage && (
