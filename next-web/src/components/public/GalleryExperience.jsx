@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import galleryItems from "@/data/gallery-media.json";
+import { getPublicGalleryCollection } from "@/lib/publicGalleryAdapter";
 
 const INITIAL_VISIBLE_ITEMS = 6;
 const LOAD_MORE_STEP = 4;
 
-function useIntersectionFlag(ref, { rootMargin = "300px", threshold = 0.15 } = {}) {
+function useIntersectionFlag(
+  ref,
+  { rootMargin = "300px", threshold = 0.15 } = {},
+) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -65,13 +68,18 @@ function MediaCard({ item }) {
         )}
 
         <div className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/90">
-          <span className="h-1.5 w-1.5 rounded-full bg-saffron" aria-hidden="true" />
+          <span
+            className="h-1.5 w-1.5 rounded-full bg-saffron"
+            aria-hidden="true"
+          />
           {item.type}
         </div>
       </div>
 
       <div className="space-y-2 p-4">
-        <p className="text-xs uppercase tracking-[0.14em] text-saffron/85">{item.category}</p>
+        <p className="text-xs uppercase tracking-[0.14em] text-saffron/85">
+          {item.category}
+        </p>
         <h2 className="text-lg font-semibold text-white">{item.title}</h2>
         <p className="text-sm text-white/70">{item.description}</p>
       </div>
@@ -81,18 +89,45 @@ function MediaCard({ item }) {
 
 export default function GalleryExperience() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState(["All"]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_ITEMS);
   const sentinelRef = useRef(null);
 
-  const categoryOptions = useMemo(() => {
-    const categories = new Set(galleryItems.map((item) => item.category));
-    return ["All", ...Array.from(categories)];
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadGallery = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await getPublicGalleryCollection({}, { signal: controller.signal });
+        const categories = Array.isArray(data.categories) ? data.categories : [];
+
+        setGalleryItems(Array.isArray(data.items) ? data.items : []);
+        setCategoryOptions(["All", ...categories]);
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+        setError(err?.message || "Unable to load gallery");
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadGallery();
+
+    return () => controller.abort();
   }, []);
 
   const filteredItems = useMemo(() => {
     if (activeCategory === "All") return galleryItems;
     return galleryItems.filter((item) => item.category === activeCategory);
-  }, [activeCategory]);
+  }, [activeCategory, galleryItems]);
 
   const visibleItems = useMemo(
     () => filteredItems.slice(0, visibleCount),
@@ -109,7 +144,9 @@ export default function GalleryExperience() {
       (entries) => {
         const [entry] = entries;
         if (!entry?.isIntersecting) return;
-        setVisibleCount((prev) => Math.min(prev + LOAD_MORE_STEP, filteredItems.length));
+        setVisibleCount((prev) =>
+          Math.min(prev + LOAD_MORE_STEP, filteredItems.length),
+        );
       },
       { root: null, rootMargin: "500px", threshold: 0.1 },
     );
@@ -123,7 +160,8 @@ export default function GalleryExperience() {
       <section className="space-y-3">
         <h1 className="font-heading text-4xl text-white">Gallery</h1>
         <p className="max-w-2xl text-white/75">
-          Browse curated photos and short venue reels sourced from our phase-1 static media feed.
+          Browse curated photos and short venue reels sourced from our phase-1
+          static media feed.
         </p>
       </section>
 
@@ -156,7 +194,22 @@ export default function GalleryExperience() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-live="polite">
+      <section
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+        aria-live="polite"
+      >
+        {loading && (
+          <p className="text-sm text-white/70">Loading gallery...</p>
+        )}
+
+        {!loading && error && (
+          <p className="text-sm text-red-400">{error}</p>
+        )}
+
+        {!loading && !error && visibleItems.length === 0 && (
+          <p className="text-sm text-white/70">No gallery items found.</p>
+        )}
+
         {visibleItems.map((item) => (
           <MediaCard key={item.id} item={item} />
         ))}
@@ -167,13 +220,19 @@ export default function GalleryExperience() {
           <button
             type="button"
             onClick={() =>
-              setVisibleCount((prev) => Math.min(prev + LOAD_MORE_STEP, filteredItems.length))
+              setVisibleCount((prev) =>
+                Math.min(prev + LOAD_MORE_STEP, filteredItems.length),
+              )
             }
             className="rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white/85 transition hover:border-saffron/60 hover:text-white"
           >
             Load More
           </button>
-          <div ref={sentinelRef} className="mx-auto h-1 w-full max-w-md" aria-hidden="true" />
+          <div
+            ref={sentinelRef}
+            className="mx-auto h-1 w-full max-w-md"
+            aria-hidden="true"
+          />
         </div>
       )}
 

@@ -1,8 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Saffron Gardens Frontend (`next-web`)
 
-## Getting Started
+Premium event management frontend for Saffron Gardens.
 
-Configure the backend API base URL in a `.env` file (copy `.env.example`):
+## Product Goal
+
+Deliver a polished guest and planner-facing web experience that supports:
+
+- Public discovery pages (home, services, gallery, contact)
+- Public chat intake and live conversation updates
+- Media-rich gallery browsing with scalable data sourcing
+- Clean integration path for backend APIs without large UI rewrites
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS 4
+- STOMP + SockJS (real-time chat updates)
+
+## Local Setup
+
+1. Create env file:
 
 ```bash
 cp .env.example .env
@@ -10,29 +28,120 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Then, run the development server:
+1. Set environment variables:
+
+- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`
+- `NEXT_PUBLIC_GALLERY_SOURCE=api`
+
+1. Run the app:
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## API Surface (Current)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Public chat proxy routes:
 
-## Learn More
+- `POST /api/public/chat/start`
+- `POST /api/public/chat/[conversationId]/message`
+- `GET /api/public/chat/[conversationId]/messages`
+- `GET /api/public/chat/[conversationId]/unread-count`
+- `GET /api/public/chat/planners`
 
-To learn more about Next.js, take a look at the following resources:
+Public gallery routes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `GET /api/public/gallery`
+- `GET /api/public/gallery/[id]`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Task Breakdown Completed So Far
 
-## Deploy on Vercel
+This section tracks delivered work in the current frontend sprint.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### EPIC 1 - Foundation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `Task 1.1 - IA and Routes (S)`
+  - Defined core public routes for Home, About/Services, Gallery, Contact, and Chat
+  - Established shared public shell/layout patterns
+  - Acceptance met: route structure and public access baseline established
+
+### EPIC 2 - Public Chat MVP
+
+- `Task 2.1 - Start Chat (M)`
+  - Built guest chat start flow (`email`, `name`) and conversation bootstrapping
+  - Added backend proxy route for starting public chats
+  - Acceptance met: guest can start a chat session
+
+- `Task 2.2 - Messaging (M)`
+  - Implemented send-message flow for active `conversationId`
+  - Added message history retrieval path in UI and API proxy
+  - Acceptance met: guest can send and view messages
+
+- `Task 2.3 - Unread Counter (S)`
+  - Added unread count fetch and display in chat header controls
+  - Acceptance met: unread count is visible and refreshable
+
+### EPIC 3 - Planner Selection + Assignment UX
+
+- `Task 3.1 - Planner Search UI (S)`
+  - Added planner search, result listing, and planner selection before chat start
+  - Added planner search proxy route and preferred planner request wiring
+  - Acceptance met: guests can search/select preferred planner
+
+- `Task 3.2 - Status Mapping (S)`
+  - Mapped backend assignment states to human-readable labels/messages:
+    `PREFERRED_ASSIGNED`, `PREFERRED_PENDING`, `PREFERRED_NOT_FOUND`, `AUTO_ASSIGNED`, `OPEN`
+  - Acceptance met: status feedback is user-friendly and consistent
+
+### EPIC 4 - Realtime + Resilience
+
+- `Task 4.1 - WebSocket Realtime (M)`
+  - Connected to `/ws-chat` and subscribed to:
+    `/topic/conversations/{conversationId}`
+    `/topic/conversations/{conversationId}/unread`
+  - Acceptance met: live updates flow through websocket subscriptions
+
+- `Task 4.2 - Polling Fallback (M)`
+  - Added periodic fallback fetch when realtime disconnects
+  - Added dedupe by message ID to prevent duplicate history entries
+  - Acceptance met: chat remains functional if websocket drops
+
+- `Task 4.3 - Session Recovery (S)`
+  - Persist and restore active `conversationId` and guest context after refresh
+  - Added robust storage helpers with session recovery behavior
+  - Added UI signal when a session is restored after reload
+  - Acceptance met: chat survives reload in normal flow
+
+### EPIC 5 - Gallery
+
+- `Task 5.1 - Phase 1 Gallery (S)`
+  - Replaced placeholder gallery with media grid (photos + videos)
+  - Added category filters and incremental lazy loading
+  - Uses static JSON data mapped to CDN media URLs
+  - Acceptance met: smooth browsing experience for guests
+
+- `Task 5.2 - API-ready Adapter (M)`
+  - Added API endpoints for gallery collection and single-item retrieval
+  - Introduced adapter layer to isolate UI from data source
+  - UI now consumes adapter, enabling source swap with minimal rewrite
+  - Added local fallback mode via `NEXT_PUBLIC_GALLERY_SOURCE=local`
+  - Acceptance met: data source can switch with minimal UI rewrite
+
+## Key Files
+
+- `src/app/chat/page.jsx`
+- `src/components/public/GalleryExperience.jsx`
+- `src/lib/publicGalleryAdapter.js`
+- `src/lib/publicGalleryStore.js`
+- `src/app/api/public/gallery/route.js`
+- `src/app/api/public/gallery/[id]/route.js`
+- `src/data/gallery-media.json`
+
+## Next Suggested Steps
+
+1. Replace static gallery store internals with backend repository/service calls while preserving response shape.
+2. Add gallery detail page using `GET /api/public/gallery/[id]`.
+3. Add lightweight integration tests for gallery API routes and adapter behavior.
