@@ -1,0 +1,112 @@
+[
+  {
+    "id": "wed-terrace-ceremony",
+    "type": "image",
+    "category": "Weddings",
+    "title": "Terrace Sunset Ceremony",
+    "description": "Golden-hour vows with skyline views and aisle florals.",
+    "src": "https://images.pexels.com/photos/2959192/pexels-photo-2959192.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Wedding ceremony setup with floral aisle at sunset"
+  },
+  {
+    "id": "rec-grand-hall",
+    "type": "image",
+    "category": "Receptions",
+    "title": "Grand Reception Hall",
+    "description": "Crystal lighting and layered tablescape styling for evening events.",
+    "src": "https://images.pexels.com/photos/169190/pexels-photo-169190.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Elegant reception hall with decorated dining tables"
+  },
+  {
+    "id": "corp-keynote-floor",
+    "type": "image",
+    "category": "Corporate",
+    "title": "Corporate Keynote Floor",
+    "description": "Flexible stage and audience layouts for launches and conferences.",
+    "src": "https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Corporate conference setup with stage lighting"
+  },
+  {
+    "id": "decor-floral-arch",
+    "type": "image",
+    "category": "Decor",
+    "title": "Signature Floral Arch",
+    "description": "Custom floral installations for entrances and photo moments.",
+    "src": "https://images.pexels.com/photos/1488315/pexels-photo-1488315.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Large floral event arch with decorative lighting"
+  },
+  {
+    "id": "outdoor-courtyard-evening",
+    "type": "image",
+    "category": "Outdoor",
+    "title": "Courtyard Evening Setup",
+    "description": "Open-air cocktail flow with ambient lighting and lounge clusters.",
+    "src": "https://images.pexels.com/photos/587741/pexels-photo-587741.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Outdoor evening event with string lights and seating"
+  },
+  {
+    "id": "wed-bridal-table",
+    "type": "image",
+    "category": "Weddings",
+    "title": "Bridal Table Styling",
+    "description": "Fine linen, layered florals, and warm candle framing.",
+    "src": "https://images.pexels.com/photos/3014856/pexels-photo-3014856.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Wedding bridal table with flowers and candles"
+  },
+  {
+    "id": "video-highlight-floral-motion",
+    "type": "video",
+    "category": "Video Highlights",
+    "title": "Floral Detail Reel",
+    "description": "A short highlight clip for bouquet and staging detail coverage.",
+    "src": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "poster": "https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Video highlight showing floral details"
+  },
+  {
+    "id": "corp-network-lounge",
+    "type": "image",
+    "category": "Corporate",
+    "title": "Networking Lounge",
+    "description": "Soft seating zones designed for high-flow networking sessions.",
+    "src": "https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Corporate networking lounge with modern seating"
+  },
+  {
+    "id": "decor-lighting-grid",
+    "type": "image",
+    "category": "Decor",
+    "title": "Lighting Grid Design",
+    "description": "Mood-led overhead lighting for visual depth and staging impact.",
+    "src": "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Decorative lighting installation at an event"
+  },
+  {
+    "id": "outdoor-garden-aisle",
+    "type": "image",
+    "category": "Outdoor",
+    "title": "Garden Aisle Experience",
+    "description": "Garden entry path curated for photography and guest arrival.",
+    "src": "https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Garden aisle decorated for an outdoor event"
+  },
+  {
+    "id": "video-highlight-venue-atmosphere",
+    "type": "video",
+    "category": "Video Highlights",
+    "title": "Venue Atmosphere Clip",
+    "description": "Showcase reel of ambient movement, lighting, and guest flow.",
+    "src": "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    "poster": "https://images.pexels.com/photos/269077/pexels-photo-269077.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Video highlight of venue atmosphere"
+  },
+  {
+    "id": "rec-table-signature",
+    "type": "image",
+    "category": "Receptions",
+    "title": "Signature Table Narrative",
+    "description": "Layered place settings with personalized stationery accents.",
+    "src": "https://images.pexels.com/photos/587741/pexels-photo-587741.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "alt": "Styled reception table with decorative details"
+  }
+]
