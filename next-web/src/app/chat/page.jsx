@@ -8,6 +8,67 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const POLL_INTERVAL_MS = 10_000;
 
+function normalizeStoredSession(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  return {
+    conversationId: String(payload.conversationId || ""),
+    assignmentStatus: String(payload.assignmentStatus || ""),
+    responseMessage: String(payload.responseMessage || ""),
+    email: String(payload.email || ""),
+    name: String(payload.name || ""),
+    preferredPlannerUsername: String(payload.preferredPlannerUsername || ""),
+  };
+}
+
+function parseStoredSession(raw) {
+  if (!raw) return null;
+  try {
+    return normalizeStoredSession(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function readStoredSession() {
+  if (typeof window === "undefined") return null;
+
+  const sessionPayload = parseStoredSession(
+    window.sessionStorage.getItem(STORAGE_KEY),
+  );
+  if (sessionPayload) return sessionPayload;
+
+  const localPayload = parseStoredSession(window.localStorage.getItem(STORAGE_KEY));
+  if (!localPayload) return null;
+
+  // Promote legacy localStorage sessions into sessionStorage for refresh recovery.
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(localPayload));
+  } catch {
+    // Ignore storage write failures.
+  }
+
+  return localPayload;
+}
+
+function persistStoredSession(payload) {
+  if (typeof window === "undefined") return;
+
+  const serialized = JSON.stringify(normalizeStoredSession(payload));
+
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, serialized);
+  } catch {
+    // Ignore storage write failures.
+  }
+
+  try {
+    window.localStorage.setItem(STORAGE_KEY, serialized);
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
 function normalizeMessagesPayload(payload) {
   if (Array.isArray(payload)) {
     return {
@@ -228,6 +289,7 @@ export default function ChatPage() {
   const [plannerLoading, setPlannerLoading] = useState(false);
   const [plannerSearchError, setPlannerSearchError] = useState("");
   const [conversationId, setConversationId] = useState("");
+  const [sessionRecovered, setSessionRecovered] = useState(false);
   const [assignmentStatus, setAssignmentStatus] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
   const [error, setError] = useState("");
@@ -261,22 +323,19 @@ export default function ChatPage() {
   );
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      setConversationId(parsed?.conversationId || "");
-      setAssignmentStatus(parsed?.assignmentStatus || "");
-      setResponseMessage(parsed?.responseMessage || "");
-      setEmail(parsed?.email || "");
-      setName(parsed?.name || "");
-      const storedPlannerUsername = parsed?.preferredPlannerUsername || "";
-      setPreferredPlannerUsername(storedPlannerUsername);
-      setPlannerQuery(storedPlannerUsername);
-      setSelectedPlanner(createStoredPlanner(storedPlannerUsername));
-    } catch {
-      // Ignore malformed local storage payload.
-    }
+    const parsed = readStoredSession();
+    if (!parsed) return;
+
+    setConversationId(parsed.conversationId);
+    setAssignmentStatus(parsed.assignmentStatus);
+    setResponseMessage(parsed.responseMessage);
+    setEmail(parsed.email);
+    setName(parsed.name);
+    const storedPlannerUsername = parsed.preferredPlannerUsername;
+    setPreferredPlannerUsername(storedPlannerUsername);
+    setPlannerQuery(storedPlannerUsername);
+    setSelectedPlanner(createStoredPlanner(storedPlannerUsername));
+    setSessionRecovered(Boolean(parsed.conversationId));
   }, []);
 
   useEffect(() => {
@@ -606,21 +665,14 @@ export default function ChatPage() {
   useEffect(() => {
     if (!conversationId) return;
 
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          conversationId,
-          assignmentStatus,
-          responseMessage,
-          email: email.trim(),
-          name: name.trim(),
-          preferredPlannerUsername: preferredPlannerUsername.trim(),
-        }),
-      );
-    } catch {
-      // Ignore local storage persistence failures.
-    }
+    persistStoredSession({
+      conversationId,
+      assignmentStatus,
+      responseMessage,
+      email: email.trim(),
+      name: name.trim(),
+      preferredPlannerUsername: preferredPlannerUsername.trim(),
+    });
   }, [
     assignmentStatus,
     conversationId,
@@ -667,22 +719,20 @@ export default function ChatPage() {
         data?.responseMessage || data?.message || "Chat started successfully.";
 
       setConversationId(nextConversationId);
+      setSessionRecovered(false);
       setAssignmentStatus(nextAssignmentStatus);
       setResponseMessage(nextResponseMessage);
       setHistoryPage(0);
       setUnreadCount(0);
 
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          conversationId: nextConversationId,
-          assignmentStatus: nextAssignmentStatus,
-          responseMessage: nextResponseMessage,
-          email: email.trim(),
-          name: name.trim(),
-          preferredPlannerUsername: preferredPlannerUsername.trim(),
-        }),
-      );
+      persistStoredSession({
+        conversationId: nextConversationId,
+        assignmentStatus: nextAssignmentStatus,
+        responseMessage: nextResponseMessage,
+        email: email.trim(),
+        name: name.trim(),
+        preferredPlannerUsername: preferredPlannerUsername.trim(),
+      });
     } catch (err) {
       setError(err?.message || "Unable to start public chat");
     } finally {
@@ -911,6 +961,11 @@ export default function ChatPage() {
 
           {conversationId && (
             <div className="rounded-xl border border-saffron/40 bg-saffron/10 p-4 text-sm text-white/90">
+              {sessionRecovered && (
+                <p className="mb-2 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+                  Active chat session restored after refresh.
+                </p>
+              )}
               <p>
                 <span className="font-semibold text-saffron">
                   Conversation ID:
