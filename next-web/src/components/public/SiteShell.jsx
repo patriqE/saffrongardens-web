@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -29,8 +30,15 @@ export default function SiteShell({ children }) {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/85 backdrop-blur-lg">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="inline-flex size-8 items-center justify-center rounded-full border border-saffron/40 bg-saffron/10 text-sm font-bold text-saffron">
-              SG
+            <span className="inline-flex size-9 items-center justify-center overflow-hidden rounded-full border border-saffron/40 bg-white/5">
+              <Image
+                src="/logo.PNG"
+                alt="Saffron Gardens logo"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                priority
+              />
             </span>
             <span className="font-heading text-lg tracking-wide text-white">
               Saffron Gardens
