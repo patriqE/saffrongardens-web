@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +9,8 @@ export async function GET(request) {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-    const target = `${backendUrl}/api/public/chat/planners?q=${encodeURIComponent(query)}`;
+    const publicPath = `/api/public/chat/planners?q=${encodeURIComponent(query)}`;
+    const target = buildBackendPublicApiUrl(backendUrl, publicPath);
 
     const response = await fetch(target, {
       method: "GET",

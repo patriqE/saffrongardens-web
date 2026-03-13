@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
 
 export async function POST(request) {
   let body = null;
@@ -21,7 +22,12 @@ export async function POST(request) {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-    const response = await fetch(`${backendUrl}/api/public/chat/start`, {
+    const target = buildBackendPublicApiUrl(
+      backendUrl,
+      "/api/public/chat/start",
+    );
+
+    const response = await fetch(target, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

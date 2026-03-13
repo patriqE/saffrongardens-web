@@ -1,4 +1,5 @@
 import galleryItems from "@/data/gallery-media.json";
+import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
 
 const DATA_SOURCE = process.env.NEXT_PUBLIC_GALLERY_SOURCE || "api";
 
@@ -87,8 +88,9 @@ export async function getPublicGalleryCollection(params = {}, { signal } = {}) {
   const path = queryString
     ? `/api/public/gallery?${queryString}`
     : "/api/public/gallery";
+  const safePath = assertGuestPublicApiPath(path);
 
-  const response = await fetch(path, {
+  const response = await fetch(safePath, {
     method: "GET",
     cache: "no-store",
     signal,
@@ -113,14 +115,15 @@ export async function getPublicGalleryById(id, { signal } = {}) {
     return item;
   }
 
-  const response = await fetch(
+  const path = assertGuestPublicApiPath(
     `/api/public/gallery/${encodeURIComponent(value)}`,
-    {
-      method: "GET",
-      cache: "no-store",
-      signal,
-    },
   );
+
+  const response = await fetch(path, {
+    method: "GET",
+    cache: "no-store",
+    signal,
+  });
 
   const payload = await response.json();
 

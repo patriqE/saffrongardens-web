@@ -7,6 +7,7 @@ import {
   frontendChatbotSettings,
   isWithinBusinessHours,
 } from "@/lib/chatbotSettings";
+import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
@@ -383,7 +384,9 @@ export default function ChatPage() {
 
       try {
         const res = await fetch(
-          `/api/public/chat/planners?q=${encodeURIComponent(query)}`,
+          assertGuestPublicApiPath(
+            `/api/public/chat/planners?q=${encodeURIComponent(query)}`,
+          ),
           {
             cache: "no-store",
             signal: controller.signal,
@@ -433,7 +436,9 @@ export default function ChatPage() {
 
       try {
         const res = await fetch(
-          `/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`,
+          assertGuestPublicApiPath(
+            `/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`,
+          ),
           { cache: "no-store" },
         );
 
@@ -481,7 +486,9 @@ export default function ChatPage() {
 
       try {
         const res = await fetch(
-          `/api/public/chat/${encodeURIComponent(conversationId)}/messages?page=${page}&size=${PAGE_SIZE}`,
+          assertGuestPublicApiPath(
+            `/api/public/chat/${encodeURIComponent(conversationId)}/messages?page=${page}&size=${PAGE_SIZE}`,
+          ),
           { cache: "no-store" },
         );
         const text = await res.text();
@@ -710,16 +717,19 @@ export default function ChatPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/public/chat/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          name: name.trim(),
-          preferredPlannerUsername:
-            preferredPlannerUsername.trim() || undefined,
-        }),
-      });
+      const res = await fetch(
+        assertGuestPublicApiPath("/api/public/chat/start"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            name: name.trim(),
+            preferredPlannerUsername:
+              preferredPlannerUsername.trim() || undefined,
+          }),
+        },
+      );
 
       const text = await res.text();
       let data = null;
@@ -811,7 +821,9 @@ export default function ChatPage() {
     setError("");
     try {
       const res = await fetch(
-        `/api/public/chat/${encodeURIComponent(conversationId)}/message`,
+        assertGuestPublicApiPath(
+          `/api/public/chat/${encodeURIComponent(conversationId)}/message`,
+        ),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

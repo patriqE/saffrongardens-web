@@ -154,6 +154,13 @@ This section tracks delivered work in the current frontend sprint.
   - Added helper functions to normalize future API payloads without changing chat page consumers
   - Bound the chat screen to the settings model so frontend defaults are ready to swap with API data later
 
+### EPIC 7 - Security
+
+- `Task 7.1 - Public API Boundary (S)`
+  - Added a reusable public API boundary helper for guest-facing requests
+  - Guarded public chat and gallery fetch paths to ensure they stay under `/api/public/**`
+  - Acceptance met: no guest-facing route calls `/api/staff/**` or `/api/admin/**`
+
 ## Key Files
 
 - `src/app/chat/page.jsx`
