@@ -2,13 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  chatbotEnabled,
+  getPrimaryChatLabel,
+  plannerOverrideLabel,
+} from "@/lib/chatbotConfig";
 
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/about-services", label: "About/Services" },
   { href: "/gallery", label: "Gallery" },
   { href: "/contact", label: "Contact" },
-  { href: "/chat", label: "Chat" },
+  { href: "/chat", label: getPrimaryChatLabel() },
 ];
 
 function isActive(pathname, href) {
@@ -32,7 +37,10 @@ export default function SiteShell({ children }) {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary">
+          <nav
+            className="hidden items-center gap-2 md:flex"
+            aria-label="Primary"
+          >
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -49,6 +57,14 @@ export default function SiteShell({ children }) {
                 </Link>
               );
             })}
+            {chatbotEnabled && (
+              <Link
+                href="/chat"
+                className="rounded-full border border-saffron/40 bg-saffron/10 px-4 py-2 text-sm font-semibold text-saffron transition hover:bg-saffron hover:text-ink"
+              >
+                {plannerOverrideLabel}
+              </Link>
+            )}
           </nav>
         </div>
       </header>
@@ -68,7 +84,9 @@ export default function SiteShell({ children }) {
         aria-label="Mobile navigation"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-ink/95 px-2 py-2 backdrop-blur md:hidden"
       >
-        <ul className="grid grid-cols-5 gap-1">
+        <ul
+          className={`grid gap-1 ${chatbotEnabled ? "grid-cols-6" : "grid-cols-5"}`}
+        >
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -86,6 +104,16 @@ export default function SiteShell({ children }) {
               </li>
             );
           })}
+          {chatbotEnabled && (
+            <li>
+              <Link
+                href="/chat"
+                className="block rounded-lg border border-saffron/40 bg-saffron/10 px-2 py-2 text-center text-xs font-semibold text-saffron transition hover:bg-saffron hover:text-ink"
+              >
+                {plannerOverrideLabel}
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
     </div>

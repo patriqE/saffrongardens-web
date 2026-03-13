@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  chatbotEnabled,
+  getPrimaryChatCtaLabel,
+  plannerOverrideLabel,
+} from "@/lib/chatbotConfig";
 
 export function HeroSection() {
   return (
@@ -69,8 +74,12 @@ export function ServiceCardsSection() {
             key={service.title}
             className="rounded-2xl border border-white/10 bg-white/5 p-5"
           >
-            <h3 className="text-xl font-semibold text-saffron">{service.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/75">{service.copy}</p>
+            <h3 className="text-xl font-semibold text-saffron">
+              {service.title}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-white/75">
+              {service.copy}
+            </p>
           </article>
         ))}
       </div>
@@ -81,18 +90,28 @@ export function ServiceCardsSection() {
 export function CtaSection() {
   return (
     <section className="rounded-3xl border border-saffron/30 bg-saffron/10 p-8 text-center">
-      <h2 className="font-heading text-3xl text-white">Ready to host something remarkable?</h2>
+      <h2 className="font-heading text-3xl text-white">
+        Ready to host something remarkable?
+      </h2>
       <p className="mx-auto mt-3 max-w-2xl text-white/75">
         Tell us your date, guest count, and vision. We will craft a custom
         proposal with venue and service recommendations.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/chat"
           className="inline-flex rounded-full bg-saffron px-6 py-3 text-sm font-semibold text-ink transition hover:bg-amber-300"
         >
-          Start A Quick Chat
+          {getPrimaryChatCtaLabel()}
         </Link>
+        {chatbotEnabled && (
+          <Link
+            href="/chat"
+            className="inline-flex rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+          >
+            {plannerOverrideLabel}
+          </Link>
+        )}
       </div>
     </section>
   );
