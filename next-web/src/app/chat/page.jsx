@@ -8,6 +8,14 @@ import {
   isWithinBusinessHours,
 } from "@/lib/chatbotSettings";
 import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
+import {
+  INPUT_LIMITS,
+  hasValidationErrors,
+  normalizeFieldErrors,
+  validateGuestMessageInput,
+  validateGuestStartInput,
+  validatePlannerQueryInput,
+} from "@/lib/publicInputSafety";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
@@ -290,6 +298,12 @@ function getAssignmentStatusDetails(status, preferredPlannerUsername) {
 
 export default function ChatPage() {
   const chatbotSettings = frontendChatbotSettings;
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    name: "",
+    plannerQuery: "",
+    chatMessage: "",
+  });
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [preferredPlannerUsername, setPreferredPlannerUsername] = useState("");
@@ -714,6 +728,34 @@ export default function ChatPage() {
   const onStartChat = async (event) => {
     event.preventDefault();
     setError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      email: "",
+      name: "",
+      plannerQuery: "",
+    }));
+
+    const startValidation = validateGuestStartInput({
+      email,
+      name,
+      preferredPlannerUsername,
+    });
+
+    setEmail(startValidation.value.email);
+    setName(startValidation.value.name);
+    setPreferredPlannerUsername(
+      startValidation.value.preferredPlannerUsername || "",
+    );
+
+    if (hasValidationErrors(startValidation.fieldErrors)) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        ...normalizeFieldErrors({ fieldErrors: startValidation.fieldErrors }),
+      }));
+      setError("Please fix the highlighted fields before starting chat.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -723,10 +765,10 @@ export default function ChatPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: email.trim(),
-            name: name.trim(),
+            email: startValidation.value.email,
+            name: startValidation.value.name,
             preferredPlannerUsername:
-              preferredPlannerUsername.trim() || undefined,
+              startValidation.value.preferredPlannerUsername,
           }),
         },
       );
@@ -740,6 +782,10 @@ export default function ChatPage() {
       }
 
       if (!res.ok) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          ...normalizeFieldErrors(data || {}),
+        }));
         throw new Error(data?.error || data?.message || "Failed to start chat");
       }
 
@@ -761,9 +807,10 @@ export default function ChatPage() {
         conversationId: nextConversationId,
         assignmentStatus: nextAssignmentStatus,
         responseMessage: nextResponseMessage,
-        email: email.trim(),
-        name: name.trim(),
-        preferredPlannerUsername: preferredPlannerUsername.trim(),
+        email: startValidation.value.email,
+        name: startValidation.value.name,
+        preferredPlannerUsername:
+          startValidation.value.preferredPlannerUsername || "",
       });
     } catch (err) {
       setError(err?.message || "Unable to start public chat");
@@ -774,10 +821,16 @@ export default function ChatPage() {
 
   const onPlannerQueryChange = (event) => {
     const value = event.target.value;
-    setPlannerQuery(value);
-    setPlannerSearchError("");
+    const validation = validatePlannerQueryInput(value);
 
-    if (value.trim() !== preferredPlannerUsername) {
+    setPlannerQuery(validation.value);
+    setPlannerSearchError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      plannerQuery: validation.fieldErrors.plannerQuery || "",
+    }));
+
+    if (validation.value.trim() !== preferredPlannerUsername) {
       setPreferredPlannerUsername("");
       setSelectedPlanner(null);
     }
@@ -801,21 +854,31 @@ export default function ChatPage() {
 
   const onQuickReplySelect = (reply) => {
     setChatMessage(reply);
+    setFieldErrors((prev) => ({ ...prev, chatMessage: "" }));
     setError("");
   };
 
   const onSendMessage = async (event) => {
     event.preventDefault();
 
-    const value = chatMessage.trim();
+    setFieldErrors((prev) => ({ ...prev, chatMessage: "" }));
+
+    const messageValidation = validateGuestMessageInput(chatMessage);
+    const value = messageValidation.value;
     if (!conversationId) {
       setError("Start chat first to get a conversation ID.");
       return;
     }
-    if (!value) {
-      setError("Message cannot be empty.");
+    if (hasValidationErrors(messageValidation.fieldErrors)) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        ...normalizeFieldErrors({ fieldErrors: messageValidation.fieldErrors }),
+      }));
+      setError("Please fix the message before sending.");
       return;
     }
+
+    setChatMessage(value);
 
     setSendingMessage(true);
     setError("");
@@ -840,6 +903,10 @@ export default function ChatPage() {
       }
 
       if (!res.ok) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          ...normalizeFieldErrors(data || {}),
+        }));
         throw new Error(
           data?.error || data?.message || "Failed to send message",
         );
@@ -916,11 +983,18 @@ export default function ChatPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, email: "" }));
+              }}
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
               placeholder="you@example.com"
+              maxLength={INPUT_LIMITS.email}
               required
             />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-400">{fieldErrors.email}</p>
+            )}
           </label>
 
           <label className="block space-y-2">
@@ -928,11 +1002,18 @@ export default function ChatPage() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, name: "" }));
+              }}
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
               placeholder="Your full name"
+              maxLength={INPUT_LIMITS.name}
               required
             />
+            {fieldErrors.name && (
+              <p className="text-xs text-red-400">{fieldErrors.name}</p>
+            )}
           </label>
 
           <label className="block space-y-2">
@@ -945,9 +1026,13 @@ export default function ChatPage() {
               onChange={onPlannerQueryChange}
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
               placeholder="Search by username or display name"
+              maxLength={INPUT_LIMITS.plannerQuery}
               autoComplete="off"
               aria-describedby="planner-search-help"
             />
+            {fieldErrors.plannerQuery && (
+              <p className="text-xs text-red-400">{fieldErrors.plannerQuery}</p>
+            )}
             <p id="planner-search-help" className="text-xs text-white/55">
               Search planners before starting the chat. Selected planner
               usernames are sent with the chat request.
@@ -1149,14 +1234,23 @@ export default function ChatPage() {
               <textarea
                 rows={3}
                 value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
+                onChange={(e) => {
+                  setChatMessage(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, chatMessage: "" }));
+                }}
                 className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
+                maxLength={INPUT_LIMITS.message}
                 placeholder={
                   chatbotSettings.enabled
                     ? chatbotSettings.welcomeMessage
                     : "Type your message for a planner"
                 }
               />
+              {fieldErrors.chatMessage && (
+                <p className="text-xs text-red-400">
+                  {fieldErrors.chatMessage}
+                </p>
+              )}
             </label>
 
             <button

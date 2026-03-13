@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
+import { validateConversationIdInput } from "@/lib/publicInputSafety";
 
 export async function GET(_request, context) {
   const params = await context.params;
-  const conversationId = params?.conversationId;
+  const conversationIdValidation = validateConversationIdInput(
+    params?.conversationId,
+  );
+  const conversationId = conversationIdValidation.value;
 
-  if (!conversationId) {
+  if (conversationIdValidation.error) {
     return NextResponse.json(
-      { error: "conversationId is required" },
+      { error: conversationIdValidation.error },
       { status: 400 },
     );
   }

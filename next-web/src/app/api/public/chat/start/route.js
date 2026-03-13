@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
+import {
+  hasValidationErrors,
+  validateGuestStartInput,
+} from "@/lib/publicInputSafety";
 
 export async function POST(request) {
   let body = null;
@@ -9,11 +13,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { email, name, preferredPlannerUsername } = body || {};
-
-  if (!email || !name) {
+  const validation = validateGuestStartInput(body || {});
+  if (hasValidationErrors(validation.fieldErrors)) {
     return NextResponse.json(
-      { error: "Both email and name are required" },
+      {
+        error: "Validation failed",
+        fieldErrors: validation.fieldErrors,
+      },
       { status: 400 },
     );
   }
@@ -31,9 +37,10 @@ export async function POST(request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email,
-        name,
-        preferredPlannerUsername: preferredPlannerUsername || null,
+        email: validation.value.email,
+        name: validation.value.name,
+        preferredPlannerUsername:
+          validation.value.preferredPlannerUsername || null,
       }),
       cache: "no-store",
     });

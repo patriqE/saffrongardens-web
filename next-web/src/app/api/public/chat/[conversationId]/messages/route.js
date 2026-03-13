@@ -1,20 +1,29 @@
 import { NextResponse } from "next/server";
 import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
+import {
+  normalizePaging,
+  validateConversationIdInput,
+} from "@/lib/publicInputSafety";
 
 export async function GET(request, context) {
   const params = await context.params;
-  const conversationId = params?.conversationId;
+  const conversationIdValidation = validateConversationIdInput(
+    params?.conversationId,
+  );
+  const conversationId = conversationIdValidation.value;
 
-  if (!conversationId) {
+  if (conversationIdValidation.error) {
     return NextResponse.json(
-      { error: "conversationId is required" },
+      { error: conversationIdValidation.error },
       { status: 400 },
     );
   }
 
   const { searchParams } = new URL(request.url);
-  const page = searchParams.get("page") ?? "0";
-  const size = searchParams.get("size") ?? "20";
+  const { page, size } = normalizePaging({
+    page: searchParams.get("page"),
+    size: searchParams.get("size"),
+  });
 
   try {
     const backendUrl =
