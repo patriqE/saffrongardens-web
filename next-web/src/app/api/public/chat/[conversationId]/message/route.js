@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
 import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
+import {
+  hasValidationErrors,
+  validateConversationIdInput,
+  validateGuestMessageInput,
+} from "@/lib/publicInputSafety";
 
 export async function POST(request, context) {
   const params = await context.params;
-  const conversationId = params?.conversationId;
+  const conversationIdValidation = validateConversationIdInput(
+    params?.conversationId,
+  );
+  const conversationId = conversationIdValidation.value;
 
-  if (!conversationId) {
+  if (conversationIdValidation.error) {
     return NextResponse.json(
-      { error: "conversationId is required" },
+      { error: conversationIdValidation.error },
       { status: 400 },
     );
   }
@@ -17,6 +25,18 @@ export async function POST(request, context) {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const rawMessage = body?.message ?? body?.content;
+  const validation = validateGuestMessageInput(rawMessage);
+  if (hasValidationErrors(validation.fieldErrors)) {
+    return NextResponse.json(
+      {
+        error: "Validation failed",
+        fieldErrors: { message: validation.fieldErrors.chatMessage },
+      },
+      { status: 400 },
+    );
   }
 
   try {
@@ -29,7 +49,11 @@ export async function POST(request, context) {
     const response = await fetch(target, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || {}),
+      body: JSON.stringify({
+        ...(body || {}),
+        message: validation.value,
+        content: validation.value,
+      }),
       cache: "no-store",
     });
 

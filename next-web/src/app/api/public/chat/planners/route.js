@@ -1,9 +1,24 @@
 import { NextResponse } from "next/server";
 import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
+import {
+  hasValidationErrors,
+  validatePlannerQueryInput,
+} from "@/lib/publicInputSafety";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q")?.trim() || "";
+  const validation = validatePlannerQueryInput(searchParams.get("q") || "");
+  if (hasValidationErrors(validation.fieldErrors)) {
+    return NextResponse.json(
+      {
+        error: "Validation failed",
+        fieldErrors: { q: validation.fieldErrors.plannerQuery },
+      },
+      { status: 400 },
+    );
+  }
+
+  const query = validation.value;
 
   try {
     const backendUrl =
