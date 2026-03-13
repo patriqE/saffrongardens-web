@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { chatbotEnabled, plannerOverrideLabel } from "@/lib/chatbotConfig";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
@@ -38,7 +39,9 @@ function readStoredSession() {
   );
   if (sessionPayload) return sessionPayload;
 
-  const localPayload = parseStoredSession(window.localStorage.getItem(STORAGE_KEY));
+  const localPayload = parseStoredSession(
+    window.localStorage.getItem(STORAGE_KEY),
+  );
   if (!localPayload) return null;
 
   // Promote legacy localStorage sessions into sessionStorage for refresh recovery.
@@ -826,15 +829,18 @@ export default function ChatPage() {
       <section className="space-y-3">
         <h1 className="font-heading text-4xl text-white">Chat</h1>
         <p className="max-w-2xl text-white/75">
-          Start a public chat as a guest. No login is required.
+          {chatbotEnabled
+            ? "Start a public chat as a guest. No login is required."
+            : "The chatbot is currently disabled. You can still start a direct conversation with a planner below."}
         </p>
       </section>
 
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
         <form className="space-y-4" onSubmit={onStartChat}>
           <div className="rounded-2xl bg-ink/70 p-4 text-sm text-white/80">
-            Provide your contact details to begin a conversation and get
-            assigned to a planner.
+            {chatbotEnabled
+              ? "Provide your contact details to begin a conversation and get assigned to a planner."
+              : `${plannerOverrideLabel} is still available. Provide your contact details to start a direct planner conversation.`}
           </div>
 
           <label className="block space-y-2">
@@ -1017,7 +1023,11 @@ export default function ChatPage() {
             disabled={!canSubmit}
             className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-ink transition hover:bg-amber-300"
           >
-            {submitting ? "Starting..." : "Start Chat"}
+            {submitting
+              ? "Starting..."
+              : chatbotEnabled
+                ? "Start Chat"
+                : plannerOverrideLabel}
           </button>
         </form>
       </section>

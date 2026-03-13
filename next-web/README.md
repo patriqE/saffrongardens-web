@@ -32,6 +32,7 @@ Copy-Item .env.example .env
 
 - `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`
 - `NEXT_PUBLIC_GALLERY_SOURCE=api`
+- `NEXT_PUBLIC_CHATBOT_ENABLED=true`
 
 1. Run the app:
 
@@ -129,6 +130,13 @@ This section tracks delivered work in the current frontend sprint.
   - UI now consumes adapter, enabling source swap with minimal rewrite
   - Added local fallback mode via `NEXT_PUBLIC_GALLERY_SOURCE=local`
   - Acceptance met: data source can switch with minimal UI rewrite
+
+### EPIC 6 - Chatbot Settings
+
+- `Task 6.1 - Feature Flag (S)`
+  - Added `NEXT_PUBLIC_CHATBOT_ENABLED` to control chatbot-oriented discovery copy
+  - Preserved the human chat flow at `/chat` and kept a persistent `Talk to Planner` override visible
+  - Acceptance met: disabling chatbot does not break human chat
 
 ## Key Files
 
