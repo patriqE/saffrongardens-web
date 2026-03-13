@@ -34,17 +34,6 @@ Copy-Item .env.example .env
 - `NEXT_PUBLIC_GALLERY_SOURCE=api`
 - `NEXT_PUBLIC_CHATBOT_ENABLED=true`
 
-Optional chatbot settings for frontend defaults and future API binding:
-
-- `NEXT_PUBLIC_CHATBOT_WELCOME_MESSAGE`
-- `NEXT_PUBLIC_CHATBOT_QUICK_REPLIES` as CSV or JSON array
-- `NEXT_PUBLIC_CHATBOT_BUSINESS_HOURS` as JSON object with `days`, `start`, `end`, `timeZone`
-- `NEXT_PUBLIC_CHATBOT_AFTER_HOURS_MESSAGE`
-- `NEXT_PUBLIC_CHATBOT_AUTO_ESCALATE`
-- `NEXT_PUBLIC_CHATBOT_ESCALATION_KEYWORDS` as CSV or JSON array
-- `NEXT_PUBLIC_CHATBOT_FALLBACK_MESSAGE`
-- `NEXT_PUBLIC_CHATBOT_HANDOVER_DELAY_SECONDS`
-
 1. Run the app:
 
 ```bash
@@ -148,11 +137,6 @@ This section tracks delivered work in the current frontend sprint.
   - Added `NEXT_PUBLIC_CHATBOT_ENABLED` to control chatbot-oriented discovery copy
   - Preserved the human chat flow at `/chat` and kept a persistent `Talk to Planner` override visible
   - Acceptance met: disabling chatbot does not break human chat
-
-- `Task 6.2 - Settings Model (S)`
-  - Added a normalized frontend settings model for `enabled`, `welcomeMessage`, `quickReplies`, `businessHours`, `afterHoursMessage`, `autoEscalateToPlanner`, `escalationKeywords`, `fallbackMessage`, and `handoverDelaySeconds`
-  - Added helper functions to normalize future API payloads without changing chat page consumers
-  - Bound the chat screen to the settings model so frontend defaults are ready to swap with API data later
 
 ## Key Files
 

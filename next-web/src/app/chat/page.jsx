@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatbotEnabled, plannerOverrideLabel } from "@/lib/chatbotConfig";
+import {
+  formatBusinessHours,
+  frontendChatbotSettings,
+  isWithinBusinessHours,
+} from "@/lib/chatbotSettings";
 
 const STORAGE_KEY = "publicChatSession";
 const PAGE_SIZE = 20;
@@ -283,6 +288,7 @@ function getAssignmentStatusDetails(status, preferredPlannerUsername) {
 }
 
 export default function ChatPage() {
+  const chatbotSettings = frontendChatbotSettings;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [preferredPlannerUsername, setPreferredPlannerUsername] = useState("");
@@ -324,6 +330,19 @@ export default function ChatPage() {
       ),
     [assignmentStatus, preferredPlannerUsername, selectedPlanner],
   );
+
+  const isBusinessHoursOpen = useMemo(
+    () => isWithinBusinessHours(chatbotSettings.businessHours),
+    [chatbotSettings.businessHours],
+  );
+
+  const quickReplies = chatbotSettings.enabled
+    ? chatbotSettings.quickReplies
+    : [];
+
+  const availabilityMessage = isBusinessHoursOpen
+    ? `Planner hours: ${formatBusinessHours(chatbotSettings.businessHours)}`
+    : chatbotSettings.afterHoursMessage;
 
   useEffect(() => {
     const parsed = readStoredSession();
@@ -770,6 +789,11 @@ export default function ChatPage() {
     setPlannerSearchError("");
   };
 
+  const onQuickReplySelect = (reply) => {
+    setChatMessage(reply);
+    setError("");
+  };
+
   const onSendMessage = async (event) => {
     event.preventDefault();
 
@@ -833,6 +857,38 @@ export default function ChatPage() {
             ? "Start a public chat as a guest. No login is required."
             : "The chatbot is currently disabled. You can still start a direct conversation with a planner below."}
         </p>
+      </section>
+
+      <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-saffron/90">
+              Frontend Settings Model
+            </p>
+            <h2 className="mt-2 font-heading text-2xl text-white">
+              {chatbotSettings.enabled
+                ? chatbotSettings.welcomeMessage
+                : `${plannerOverrideLabel} is available while the chatbot is turned off.`}
+            </h2>
+          </div>
+
+          <p className="text-sm text-white/70">{availabilityMessage}</p>
+
+          {chatbotSettings.enabled && (
+            <p className="text-sm text-white/65">
+              {chatbotSettings.fallbackMessage}
+            </p>
+          )}
+
+          {chatbotSettings.enabled && chatbotSettings.autoEscalateToPlanner && (
+            <p className="text-xs text-white/55">
+              Planner handover is configured after about{" "}
+              {chatbotSettings.handoverDelaySeconds} seconds when messages
+              include keywords like{" "}
+              {chatbotSettings.escalationKeywords.slice(0, 4).join(", ")}.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
@@ -1061,6 +1117,21 @@ export default function ChatPage() {
           </div>
 
           <form className="mt-4 space-y-3" onSubmit={onSendMessage}>
+            {quickReplies.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {quickReplies.map((reply) => (
+                  <button
+                    key={reply}
+                    type="button"
+                    onClick={() => onQuickReplySelect(reply)}
+                    className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/75 transition hover:border-saffron/50 hover:text-white"
+                  >
+                    {reply}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <label className="block space-y-2">
               <span className="text-sm text-white/80">Message</span>
               <textarea
@@ -1068,7 +1139,11 @@ export default function ChatPage() {
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
-                placeholder="Type your message"
+                placeholder={
+                  chatbotSettings.enabled
+                    ? chatbotSettings.welcomeMessage
+                    : "Type your message for a planner"
+                }
               />
             </label>
 

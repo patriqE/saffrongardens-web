@@ -1,18 +1,6 @@
-const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
+import { frontendChatbotSettings } from "@/lib/chatbotSettings";
 
-function parseBooleanFlag(value, fallback = true) {
-  if (typeof value !== "string") return fallback;
-
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return fallback;
-
-  return TRUE_VALUES.has(normalized);
-}
-
-export const chatbotEnabled = parseBooleanFlag(
-  process.env.NEXT_PUBLIC_CHATBOT_ENABLED,
-  true,
-);
+export const chatbotEnabled = frontendChatbotSettings.enabled;
 
 export const plannerOverrideLabel = "Talk to Planner";
 
