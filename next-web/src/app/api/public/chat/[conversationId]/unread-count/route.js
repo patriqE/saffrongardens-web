@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildBackendPublicApiUrl } from "@/lib/publicApiBoundary";
 
 export async function GET(_request, context) {
   const params = await context.params;
@@ -15,14 +16,14 @@ export async function GET(_request, context) {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-    const response = await fetch(
-      `${backendUrl}/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      },
-    );
+    const publicPath = `/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`;
+    const target = buildBackendPublicApiUrl(backendUrl, publicPath);
+
+    const response = await fetch(target, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
 
     const text = await response.text();
     let data = null;
