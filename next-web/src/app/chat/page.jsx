@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatbotEnabled, plannerOverrideLabel } from "@/lib/chatbotConfig";
-import {
-  formatBusinessHours,
-  frontendChatbotSettings,
-  isWithinBusinessHours,
-} from "@/lib/chatbotSettings";
+import { frontendChatbotSettings } from "@/lib/chatbotSettings";
 import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
 import {
   INPUT_LIMITS,
@@ -22,6 +18,10 @@ const PAGE_SIZE = 20;
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const POLL_INTERVAL_MS = 10_000;
+const NEW_CHAT_WELCOME_MESSAGE =
+  "Welcome to Saffron Gardens. I can help with venue tours, availability, pricing, and getting you to a planner.";
+const NEW_CHAT_HOURS_MESSAGE =
+  "Planner hours: Mon, Tue, Wed, Thu, Fri, Sat • 09:00-18:00";
 
 function normalizeStoredSession(payload) {
   if (!payload || typeof payload !== "object") return null;
@@ -346,18 +346,9 @@ export default function ChatPage() {
     [assignmentStatus, preferredPlannerUsername, selectedPlanner],
   );
 
-  const isBusinessHoursOpen = useMemo(
-    () => isWithinBusinessHours(chatbotSettings.businessHours),
-    [chatbotSettings.businessHours],
-  );
-
   const quickReplies = chatbotSettings.enabled
     ? chatbotSettings.quickReplies
     : [];
-
-  const availabilityMessage = isBusinessHoursOpen
-    ? `Planner hours: ${formatBusinessHours(chatbotSettings.businessHours)}`
-    : chatbotSettings.afterHoursMessage;
 
   useEffect(() => {
     const parsed = readStoredSession();
@@ -929,48 +920,18 @@ export default function ChatPage() {
 
   return (
     <div className="space-y-8">
-      <section className="space-y-3">
-        <h1 className="font-heading text-4xl text-white">Chat</h1>
-        <p className="max-w-2xl text-white/75">
-          {chatbotEnabled
-            ? "Start a public chat as a guest. No login is required."
-            : "The chatbot is currently disabled. You can still start a direct conversation with a planner below."}
-        </p>
-      </section>
-
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-saffron/90">
-              Frontend Settings Model
+        {!conversationId && (
+          <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/10 p-4">
+            <p className="text-sm font-medium leading-relaxed text-slate-100">
+              {NEW_CHAT_WELCOME_MESSAGE}
             </p>
-            <h2 className="mt-2 font-heading text-2xl text-white">
-              {chatbotSettings.enabled
-                ? chatbotSettings.welcomeMessage
-                : `${plannerOverrideLabel} is available while the chatbot is turned off.`}
-            </h2>
+            <p className="mt-2 text-xs font-semibold text-primary">
+              {NEW_CHAT_HOURS_MESSAGE}
+            </p>
           </div>
+        )}
 
-          <p className="text-sm text-white/70">{availabilityMessage}</p>
-
-          {chatbotSettings.enabled && (
-            <p className="text-sm text-white/65">
-              {chatbotSettings.fallbackMessage}
-            </p>
-          )}
-
-          {chatbotSettings.enabled && chatbotSettings.autoEscalateToPlanner && (
-            <p className="text-xs text-white/55">
-              Planner handover is configured after about{" "}
-              {chatbotSettings.handoverDelaySeconds} seconds when messages
-              include keywords like{" "}
-              {chatbotSettings.escalationKeywords.slice(0, 4).join(", ")}.
-            </p>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
         <form className="space-y-4" onSubmit={onStartChat}>
           <div className="rounded-2xl bg-ink/70 p-4 text-sm text-white/80">
             {chatbotEnabled
