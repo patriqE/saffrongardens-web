@@ -1,6 +1,7 @@
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import SiteShell from "@/components/public/SiteShell";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const headingFont = Cormorant_Garamond({
   variable: "--font-heading",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${headingFont.variable} ${bodyFont.variable} antialiased`}
       >
-        <SiteShell>{children}</SiteShell>
+        <ErrorBoundary>
+          <SiteShell>{children}</SiteShell>
+        </ErrorBoundary>
       </body>
     </html>
   );
