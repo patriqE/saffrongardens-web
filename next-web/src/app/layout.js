@@ -2,6 +2,7 @@ import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import SiteShell from "@/components/public/SiteShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ServiceWorkerInit from "@/components/ServiceWorkerInit";
 
 const headingFont = Cormorant_Garamond({
   variable: "--font-heading",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${headingFont.variable} ${bodyFont.variable} antialiased`}
       >
+        <ServiceWorkerInit />
         <ErrorBoundary>
           <SiteShell>{children}</SiteShell>
         </ErrorBoundary>
