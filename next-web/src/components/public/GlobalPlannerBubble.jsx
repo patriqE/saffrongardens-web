@@ -1,13 +1,32 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { chatbotEnabled } from "@/lib/chatbotConfig";
+
+const EMBED_LOAD_TIMEOUT_MS = 2500;
 
 export default function GlobalPlannerBubble() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setIframeLoaded(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (!iframeLoaded) {
+        router.push("/chat?planner=true");
+      }
+    }, EMBED_LOAD_TIMEOUT_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [iframeLoaded, open, router]);
 
   if (!chatbotEnabled || pathname === "/chat") {
     return null;
@@ -62,6 +81,7 @@ export default function GlobalPlannerBubble() {
             title="Planner chat"
             src="/chat?planner=true&embed=1"
             className="h-full w-full border-0 bg-background-dark"
+            onLoad={() => setIframeLoaded(true)}
           />
         </div>
       )}
