@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import PublicHeader from "@/components/public/PublicHeader";
 
 export const metadata = {
@@ -143,18 +144,30 @@ export default function ContactPage() {
           </div>
 
           <div className="flex gap-8 text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">
-            <a className="transition-colors hover:text-primary" href="#">
+            <Link
+              className="transition-colors hover:text-primary"
+              href="/contact"
+            >
               Privacy
-            </a>
-            <a className="transition-colors hover:text-primary" href="#">
+            </Link>
+            <Link
+              className="transition-colors hover:text-primary"
+              href="/contact"
+            >
               Terms
-            </a>
-            <a className="transition-colors hover:text-primary" href="#">
+            </Link>
+            <Link
+              className="transition-colors hover:text-primary"
+              href="mailto:concierge@saffrongardens.com?subject=Legal%20Inquiry"
+            >
               Legal
-            </a>
-            <a className="transition-colors hover:text-primary" href="#">
+            </Link>
+            <Link
+              className="transition-colors hover:text-primary"
+              href="mailto:press@saffrongardens.com?subject=Press%20Inquiry"
+            >
               Press
-            </a>
+            </Link>
           </div>
 
           <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
