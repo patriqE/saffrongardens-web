@@ -1,7 +1,13 @@
 import Link from "next/link";
 import PublicHeader from "@/components/public/PublicHeader";
+import GalleryControls from "@/components/public/GalleryControls";
 
 const filterOptions = ["All Events", "Weddings", "Corporate", "Floral"];
+const sortOptions = ["latest", "oldest", "popular"];
+
+function normalizeSelectedOption(value, options, fallback) {
+  return options.includes(value) ? value : fallback;
+}
 
 const galleryItems = [
   {
@@ -71,6 +77,8 @@ export const metadata = {
 export default async function GalleryPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const rawQueryParam = resolvedSearchParams?.q;
+  const rawCategoryParam = resolvedSearchParams?.category;
+  const rawSortParam = resolvedSearchParams?.sort;
   const searchQueryRaw =
     typeof rawQueryParam === "string"
       ? rawQueryParam
@@ -78,11 +86,43 @@ export default async function GalleryPage({ searchParams }) {
         ? (rawQueryParam[0] ?? "")
         : "";
   const searchQuery = searchQueryRaw.trim().toLowerCase();
-  const filteredGalleryItems = searchQuery
-    ? galleryItems.filter((item) =>
-        item.title.toLowerCase().includes(searchQuery),
-      )
-    : galleryItems;
+  const selectedCategory = normalizeSelectedOption(
+    typeof rawCategoryParam === "string" ? rawCategoryParam : "All Events",
+    filterOptions,
+    "All Events",
+  );
+  const selectedSort = normalizeSelectedOption(
+    typeof rawSortParam === "string" ? rawSortParam : "latest",
+    sortOptions,
+    "latest",
+  );
+
+  const filteredGalleryItems = galleryItems
+    .filter((item) => {
+      const matchesQuery = searchQuery
+        ? item.title.toLowerCase().includes(searchQuery)
+        : true;
+      const matchesCategory =
+        selectedCategory === "All Events" || item.category === selectedCategory;
+
+      return matchesQuery && matchesCategory;
+    })
+    .slice()
+    .sort((left, right) => {
+      if (selectedSort === "oldest") {
+        return galleryItems.indexOf(right) - galleryItems.indexOf(left);
+      }
+
+      if (selectedSort === "popular") {
+        if (left.isVideo !== right.isVideo) {
+          return left.isVideo ? -1 : 1;
+        }
+
+        return left.title.localeCompare(right.title);
+      }
+
+      return galleryItems.indexOf(left) - galleryItems.indexOf(right);
+    });
 
   return (
     <div className="min-h-screen bg-background-light text-slate-900 dark:bg-background-dark dark:text-slate-100">
@@ -113,34 +153,11 @@ export default async function GalleryPage({ searchParams }) {
           </div>
         </section>
 
-        <section className="mx-auto mb-12 flex w-full max-w-[1400px] flex-col justify-between gap-6 border-b border-slate-200 pb-8 dark:border-primary/10 md:flex-row md:items-center">
-          <div className="flex w-fit gap-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800/50">
-            {filterOptions.map((option, index) => (
-              <button
-                key={option}
-                type="button"
-                className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors ${
-                  index === 0
-                    ? "bg-primary font-bold text-background-dark shadow-lg shadow-primary/10"
-                    : "text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4 text-slate-500 dark:text-primary/60">
-            <span className="text-xs font-bold uppercase tracking-wider">
-              Sort by:
-            </span>
-            <select className="cursor-pointer border-none bg-transparent text-sm font-bold text-slate-900 focus:ring-0 dark:text-slate-100">
-              <option>Latest First</option>
-              <option>Oldest First</option>
-              <option>By Popularity</option>
-            </select>
-          </div>
-        </section>
+        <GalleryControls
+          currentCategory={selectedCategory}
+          currentSort={selectedSort}
+          filterOptions={filterOptions}
+        />
 
         <section
           className="mx-auto w-full max-w-[1400px]"
@@ -247,12 +264,13 @@ export default async function GalleryPage({ searchParams }) {
                   />
                 </svg>
               </a>
-              <a
+              <Link
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 transition-colors hover:bg-primary hover:text-background-dark dark:bg-slate-800"
-                href="#"
+                href="/contact"
+                aria-label="Contact Saffron Gardens"
               >
                 SH
-              </a>
+              </Link>
             </div>
           </div>
           <div>
@@ -308,19 +326,28 @@ export default async function GalleryPage({ searchParams }) {
                 </Link>
               </li>
               <li>
-                <a className="hover:text-primary transition-colors" href="#">
+                <Link
+                  className="hover:text-primary transition-colors"
+                  href="/contact"
+                >
                   Careers
-                </a>
+                </Link>
               </li>
               <li>
-                <a className="hover:text-primary transition-colors" href="#">
+                <Link
+                  className="hover:text-primary transition-colors"
+                  href="/contact"
+                >
                   Press Inquiries
-                </a>
+                </Link>
               </li>
               <li>
-                <a className="hover:text-primary transition-colors" href="#">
+                <Link
+                  className="hover:text-primary transition-colors"
+                  href="/contact"
+                >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

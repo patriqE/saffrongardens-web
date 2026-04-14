@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import PublicHeader from "@/components/public/PublicHeader";
 
@@ -39,12 +40,18 @@ export default function Home() {
               unforgettable celebrations.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button className="w-full sm:w-auto min-w-[200px] h-14 bg-primary text-background-dark rounded-lg font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/10">
+              <Link
+                href="/contact"
+                className="inline-flex w-full sm:w-auto min-w-[200px] h-14 items-center justify-center bg-primary text-background-dark rounded-lg font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/10"
+              >
                 Book Private Tour
-              </button>
-              <button className="w-full sm:w-auto min-w-[200px] h-14 bg-white/5 backdrop-blur-md border border-white/10 text-slate-100 rounded-lg font-bold text-lg hover:bg-white/10 transition-all">
+              </Link>
+              <Link
+                href="/gallery"
+                className="inline-flex w-full sm:w-auto min-w-[200px] h-14 items-center justify-center bg-white/5 backdrop-blur-md border border-white/10 text-slate-100 rounded-lg font-bold text-lg hover:bg-white/10 transition-all"
+              >
                 View Showcase
-              </button>
+              </Link>
             </div>
           </div>
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce">
@@ -102,9 +109,9 @@ export default function Home() {
                     A culinary journey curated by Michelin-star chefs, featuring
                     seasonal flavors and artistic presentation.
                   </p>
-                  <a
+                  <Link
                     className="text-primary font-bold flex items-center gap-2 group-hover:gap-4 transition-all"
-                    href="#"
+                    href="/about-services"
                   >
                     Learn More{" "}
                     <svg
@@ -119,7 +126,7 @@ export default function Home() {
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
               </div>
               {/* Service 2 */}
@@ -141,9 +148,9 @@ export default function Home() {
                     Dedicated planning staff available 24/7 to manage every
                     logistical nuance with absolute discretion.
                   </p>
-                  <a
+                  <Link
                     className="text-primary font-bold flex items-center gap-2 group-hover:gap-4 transition-all"
-                    href="#"
+                    href="/about-services"
                   >
                     Learn More{" "}
                     <svg
@@ -158,7 +165,7 @@ export default function Home() {
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
               </div>
               {/* Service 3 */}
@@ -180,9 +187,9 @@ export default function Home() {
                     Custom floral and light arrangements designed by
                     award-winning visual artists to set the mood.
                   </p>
-                  <a
+                  <Link
                     className="text-primary font-bold flex items-center gap-2 group-hover:gap-4 transition-all"
-                    href="#"
+                    href="/about-services"
                   >
                     Learn More{" "}
                     <svg
@@ -197,7 +204,7 @@ export default function Home() {
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -326,12 +333,18 @@ export default function Home() {
               landmark event.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-primary text-background-dark h-16 px-10 rounded-lg font-bold text-lg hover:brightness-110 shadow-2xl shadow-primary/20 transition-all">
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center bg-primary text-background-dark h-16 px-10 rounded-lg font-bold text-lg hover:brightness-110 shadow-2xl shadow-primary/20 transition-all"
+              >
                 Request Private Invitation
-              </button>
-              <button className="border border-white/20 text-slate-100 h-16 px-10 rounded-lg font-bold text-lg hover:bg-white/5 transition-all">
+              </Link>
+              <Link
+                href="/gallery"
+                className="inline-flex items-center justify-center border border-white/20 text-slate-100 h-16 px-10 rounded-lg font-bold text-lg hover:bg-white/5 transition-all"
+              >
                 Download Brochure
-              </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -363,36 +376,36 @@ export default function Home() {
               <h6 className="text-slate-100 font-bold mb-6">Navigation</h6>
               <ul className="space-y-4 text-slate-400 text-sm">
                 <li>
-                  <a
+                  <Link
                     className="hover:text-primary transition-colors"
-                    href="#gallery"
+                    href="/gallery"
                   >
                     Gallery
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     className="hover:text-primary transition-colors"
-                    href="#services"
+                    href="/about-services"
                   >
                     Services
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     className="hover:text-primary transition-colors"
-                    href="#booking"
+                    href="/contact"
                   >
                     Book Tour
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     className="hover:text-primary transition-colors"
-                    href="#contact"
+                    href="/contact"
                   >
                     Contact
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -400,19 +413,28 @@ export default function Home() {
               <h6 className="text-slate-100 font-bold mb-6">Legal</h6>
               <ul className="space-y-4 text-slate-400 text-sm">
                 <li>
-                  <a className="hover:text-primary transition-colors" href="#">
+                  <Link
+                    className="hover:text-primary transition-colors"
+                    href="/contact"
+                  >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a className="hover:text-primary transition-colors" href="#">
+                  <Link
+                    className="hover:text-primary transition-colors"
+                    href="/contact"
+                  >
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a className="hover:text-primary transition-colors" href="#">
+                  <Link
+                    className="hover:text-primary transition-colors"
+                    href="/contact"
+                  >
                     Cookie Policy
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -445,26 +467,31 @@ export default function Home() {
               © 2024 Saffron Gardens Group. All Rights Reserved.
             </p>
             <div className="flex gap-6">
-              <a
+              <Link
                 className="text-slate-500 hover:text-primary transition-colors"
-                href="#"
+                href="https://instagram.com/the_saffron_gardens"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit Saffron Gardens on Instagram"
               >
                 <span className="material-symbols-outlined">public</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 className="text-slate-500 hover:text-primary transition-colors"
-                href="#"
+                href="/gallery"
+                aria-label="View the gallery"
               >
                 <span className="material-symbols-outlined">photo_camera</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 className="text-slate-500 hover:text-primary transition-colors"
-                href="#"
+                href="mailto:concierge@saffrongardens.com"
+                aria-label="Email Saffron Gardens"
               >
                 <span className="material-symbols-outlined">
                   alternate_email
                 </span>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
