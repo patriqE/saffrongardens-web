@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { chatbotEnabled, plannerOverrideLabel } from "@/lib/chatbotConfig";
+import {
+  chatbotEnabled,
+  getPrimaryChatCtaLabel,
+  plannerOverrideLabel,
+} from "@/lib/chatbotConfig";
 import { frontendChatbotSettings } from "@/lib/chatbotSettings";
 import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
 import {
@@ -935,8 +939,8 @@ export default function ChatPage() {
         <form className="space-y-4" onSubmit={onStartChat}>
           <div className="rounded-2xl bg-ink/70 p-4 text-sm text-white/80">
             {chatbotEnabled
-              ? "Provide your contact details to begin a conversation and get assigned to a planner."
-              : `${plannerOverrideLabel} is still available. Provide your contact details to start a direct planner conversation.`}
+              ? "Provide your contact details to start chat and get assigned to a planner."
+              : `${plannerOverrideLabel} is available. Provide your contact details to start a direct planner conversation.`}
           </div>
 
           <label className="block space-y-2">
@@ -1140,7 +1144,7 @@ export default function ChatPage() {
             {submitting
               ? "Starting..."
               : chatbotEnabled
-                ? "Start Chat"
+                ? getPrimaryChatCtaLabel()
                 : plannerOverrideLabel}
           </button>
         </form>

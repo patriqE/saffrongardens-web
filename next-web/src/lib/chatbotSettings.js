@@ -11,7 +11,11 @@ export const DEFAULT_CHATBOT_SETTINGS = {
   enabled: true,
   welcomeMessage:
     "Welcome to Saffron Gardens. I can help with venue tours, availability, pricing, and getting you to a planner.",
-  quickReplies: ["Check availability", "Book a venue tour", "Talk to planner"],
+  quickReplies: [
+    "Check availability",
+    "Book a venue tour",
+    "Chat with planner",
+  ],
   businessHours: DEFAULT_BUSINESS_HOURS,
   afterHoursMessage:
     "Our planners are currently offline. Leave your details and we will follow up during business hours.",
