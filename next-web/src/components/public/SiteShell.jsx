@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   chatbotEnabled,
+  getPrimaryChatCtaLabel,
   getPrimaryChatLabel,
-  plannerOverrideLabel,
 } from "@/lib/chatbotConfig";
 import GlobalPlannerBubble from "@/components/public/GlobalPlannerBubble";
 
@@ -78,7 +78,7 @@ export default function SiteShell({ children }) {
                   href="/chat"
                   className="rounded-full border border-saffron/40 bg-saffron/10 px-4 py-2 text-sm font-semibold text-saffron transition hover:bg-saffron hover:text-ink"
                 >
-                  {plannerOverrideLabel}
+                  {getPrimaryChatCtaLabel()}
                 </Link>
               )}
             </nav>
@@ -136,7 +136,7 @@ export default function SiteShell({ children }) {
                   href="/chat"
                   className="block rounded-lg border border-saffron/40 bg-saffron/10 px-2 py-2 text-center text-xs font-semibold text-saffron transition hover:bg-saffron hover:text-ink"
                 >
-                  {plannerOverrideLabel}
+                  {getPrimaryChatCtaLabel()}
                 </Link>
               </li>
             )}
