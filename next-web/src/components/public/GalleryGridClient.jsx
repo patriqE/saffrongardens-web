@@ -83,7 +83,9 @@ export default function GalleryGridClient({ items = [] }) {
                       }))
                     }
                     className={`h-full w-full object-cover transition-all duration-500 ${
-                      isLoaded ? "opacity-100 group-hover:scale-105" : "opacity-0"
+                      isLoaded
+                        ? "opacity-100 group-hover:scale-105"
+                        : "opacity-0"
                     }`}
                   />
                   <div

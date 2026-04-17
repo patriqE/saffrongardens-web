@@ -12,7 +12,9 @@ const CARD_ASPECT = "aspect-[4/3]";
 function MediaSkeletonCard() {
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink/45">
-      <div className={`animate-pulse bg-gradient-to-br from-white/10 via-white/5 to-white/0 ${CARD_ASPECT}`} />
+      <div
+        className={`animate-pulse bg-gradient-to-br from-white/10 via-white/5 to-white/0 ${CARD_ASPECT}`}
+      />
       <div className="space-y-2 p-4">
         <div className="h-3 w-20 rounded bg-white/10" />
         <div className="h-5 w-3/4 rounded bg-white/10" />
@@ -33,7 +35,9 @@ function MediaCard({ item, index, onOpen }) {
         className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={`Open ${item.title} in gallery lightbox`}
       >
-        <div className={`relative overflow-hidden bg-gradient-to-br from-white/5 to-white/0 ${CARD_ASPECT}`}>
+        <div
+          className={`relative overflow-hidden bg-gradient-to-br from-white/5 to-white/0 ${CARD_ASPECT}`}
+        >
           <div
             className={`absolute inset-0 animate-pulse bg-gradient-to-br from-white/10 via-white/5 to-white/0 transition-opacity duration-300 ${mediaLoaded ? "opacity-0" : "opacity-100"}`}
             aria-hidden="true"
@@ -83,7 +87,9 @@ function MediaCard({ item, index, onOpen }) {
             <p className="text-xs uppercase tracking-[0.14em] text-saffron/85">
               {item.category}
             </p>
-            <h2 className="mt-1 text-lg font-semibold text-white">{item.title}</h2>
+            <h2 className="mt-1 text-lg font-semibold text-white">
+              {item.title}
+            </h2>
           </div>
         </div>
 
@@ -113,8 +119,13 @@ export default function GalleryExperience() {
       setError("");
 
       try {
-        const data = await getPublicGalleryCollection({}, { signal: controller.signal });
-        const categories = Array.isArray(data.categories) ? data.categories : [];
+        const data = await getPublicGalleryCollection(
+          {},
+          { signal: controller.signal },
+        );
+        const categories = Array.isArray(data.categories)
+          ? data.categories
+          : [];
 
         setGalleryItems(Array.isArray(data.items) ? data.items : []);
         setCategoryOptions(["All", ...categories]);
@@ -254,9 +265,7 @@ export default function GalleryExperience() {
             <MediaSkeletonCard key={`skeleton-${index}`} />
           ))}
 
-        {!loading && error && (
-          <p className="text-sm text-red-400">{error}</p>
-        )}
+        {!loading && error && <p className="text-sm text-red-400">{error}</p>}
 
         {!loading && !error && visibleItems.length === 0 && (
           <p className="text-sm text-white/70">No gallery items found.</p>
