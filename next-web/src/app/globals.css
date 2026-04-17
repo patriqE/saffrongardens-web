@@ -57,6 +57,14 @@ a {
     border-radius: 10px;
 }
 
+.mobile-nav-scrollbar {
+    -ms-overflow-style: none;
+}
+
+.mobile-nav-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     *,
