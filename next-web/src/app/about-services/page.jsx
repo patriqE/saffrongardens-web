@@ -19,10 +19,10 @@ export default function AboutServicesPage() {
             timeline.
           </h1>
           <p className="mt-4 max-w-3xl text-white/75">
-            Saffron Gardens is an event destination for weddings, private
-            galas, cultural ceremonies, and premium brand gatherings. We pair
-            timeless architecture with modern production standards so every
-            event feels effortless to guests and controlled behind the scenes.
+            Saffron Gardens is an event destination for weddings, private galas,
+            cultural ceremonies, and premium brand gatherings. We pair timeless
+            architecture with modern production standards so every event feels
+            effortless to guests and controlled behind the scenes.
           </p>
 
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
