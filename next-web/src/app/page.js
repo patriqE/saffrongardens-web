@@ -26,32 +26,52 @@ export default function Home() {
           </div>
           <div className="relative z-20 text-center px-4 max-w-4xl mx-auto">
             <span className="inline-block text-primary text-sm font-bold tracking-[0.3em] uppercase mb-6 opacity-90">
-              The Pinnacle of Elegance
+              Signature Event Destination
             </span>
             <h1 className="text-slate-100 text-5xl md:text-7xl lg:text-8xl font-black leading-none tracking-tight mb-8">
-              Exquisite Moments <br />{" "}
+              Host Celebrations <br />{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-200 to-primary">
-                Defined.
+                Worth Remembering.
               </span>
             </h1>
             <p className="text-slate-300 text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto mb-10">
-              Experience the prestige of Saffron Gardens. A cinematic sanctuary
-              designed for the world&apos;s most discerning guests and
-              unforgettable celebrations.
+              Discover cinematic venues, tailored planning, and seamless
+              production support for weddings, private events, and elevated
+              corporate occasions.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/contact"
-                className="inline-flex w-full sm:w-auto min-w-[200px] h-14 items-center justify-center bg-primary text-background-dark rounded-lg font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/10"
+                className="inline-flex w-full sm:w-auto min-w-[220px] h-14 items-center justify-center bg-primary text-background-dark rounded-lg font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/20"
               >
                 Book Private Tour
               </Link>
               <Link
                 href="/gallery"
-                className="inline-flex w-full sm:w-auto min-w-[200px] h-14 items-center justify-center bg-white/5 backdrop-blur-md border border-white/10 text-slate-100 rounded-lg font-bold text-lg hover:bg-white/10 transition-all"
+                className="inline-flex w-full sm:w-auto min-w-[200px] h-14 items-center justify-center border border-white/20 text-slate-100 rounded-lg font-semibold text-lg hover:bg-white/10 transition-all"
               >
-                View Showcase
+                Explore Gallery
               </Link>
+            </div>
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-white/15 bg-black/35 px-4 py-3 backdrop-blur-sm">
+                <p className="text-primary text-xs font-bold tracking-[0.2em] uppercase">
+                  Events Hosted
+                </p>
+                <p className="mt-1 text-slate-100 text-2xl font-bold">1,200+</p>
+              </div>
+              <div className="rounded-lg border border-white/15 bg-black/35 px-4 py-3 backdrop-blur-sm">
+                <p className="text-primary text-xs font-bold tracking-[0.2em] uppercase">
+                  Client Satisfaction
+                </p>
+                <p className="mt-1 text-slate-100 text-2xl font-bold">4.9/5</p>
+              </div>
+              <div className="rounded-lg border border-white/15 bg-black/35 px-4 py-3 backdrop-blur-sm">
+                <p className="text-primary text-xs font-bold tracking-[0.2em] uppercase">
+                  Dedicated Planners
+                </p>
+                <p className="mt-1 text-slate-100 text-2xl font-bold">24/7</p>
+              </div>
             </div>
           </div>
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce">
