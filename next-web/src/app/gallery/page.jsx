@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PublicHeader from "@/components/public/PublicHeader";
 import GalleryControls from "@/components/public/GalleryControls";
+import GalleryGridClient from "@/components/public/GalleryGridClient";
 
 const filterOptions = ["All Events", "Weddings", "Corporate", "Floral"];
 const sortOptions = ["latest", "oldest", "popular"];
@@ -168,45 +169,13 @@ export default async function GalleryPage({ searchParams }) {
               ? `Showing ${filteredGalleryItems.length} result${filteredGalleryItems.length === 1 ? "" : "s"} for "${searchQueryRaw}"`
               : `Showing all ${galleryItems.length} events`}
           </p>
-          <div
-            className="columns-1 gap-6 md:columns-2 lg:columns-3"
-            style={{ columnGap: "1.5rem" }}
-          >
-            {filteredGalleryItems.map((item) => (
-              <article
-                key={item.title}
-                className="group relative mb-6 cursor-pointer overflow-hidden rounded-xl bg-slate-200 break-inside-avoid dark:bg-slate-800"
-              >
-                <div className={`relative overflow-hidden ${item.aspect}`}>
-                  <div
-                    className="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: `url("${item.image}")` }}
-                  />
-                  <div
-                    className={`absolute inset-0 transition-colors ${item.isVideo ? "bg-black/30 group-hover:bg-black/10" : "bg-gradient-to-t from-background-dark/80 via-transparent to-transparent opacity-0 group-hover:opacity-100"}`}
-                  />
-                  {item.isVideo && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-sm font-bold text-background-dark shadow-2xl transition-transform group-hover:scale-105">
-                        PLAY
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background-dark to-transparent p-6 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                  <p className="mb-1 text-xs font-bold uppercase text-primary">
-                    {item.category}
-                  </p>
-                  <h3 className="text-lg font-bold text-white">{item.title}</h3>
-                </div>
-              </article>
-            ))}
-            {filteredGalleryItems.length === 0 && (
-              <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-slate-500 dark:text-slate-300">
-                No events found for &quot;{searchQueryRaw}&quot;.
-              </div>
-            )}
-          </div>
+          {filteredGalleryItems.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center text-slate-500 dark:text-slate-300">
+              No events found for &quot;{searchQueryRaw}&quot;.
+            </div>
+          ) : (
+            <GalleryGridClient items={filteredGalleryItems} />
+          )}
         </section>
 
         <section className="mx-auto mb-16 mt-20 w-full max-w-[1400px] border-t border-slate-200 pt-16 text-center dark:border-primary/10">
