@@ -4,18 +4,44 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { chatbotEnabled, plannerOverrideLabel } from "@/lib/chatbotConfig";
+import { assertGuestPublicApiPath } from "@/lib/publicApiBoundary";
 import { trackUiEvent } from "@/lib/uiAnalytics";
 
 const EMBED_LOAD_TIMEOUT_MS = 2500;
 const DISMISS_STORAGE_KEY = "globalPlannerBubbleDismissed";
+const MINIMIZED_STORAGE_KEY = "globalPlannerBubbleMinimized";
+const CHAT_SESSION_STORAGE_KEY = "publicChatSession";
+const UNREAD_POLL_INTERVAL_MS = 12_000;
+
+function parseConversationIdFromSession() {
+  try {
+    const raw = window.sessionStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+    if (!raw) return "";
+    const payload = JSON.parse(raw);
+    return String(payload?.conversationId || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function normalizeUnreadCount(payload) {
+  if (typeof payload === "number") return payload;
+  if (Number.isInteger(payload?.unreadCount)) return payload.unreadCount;
+  if (Number.isInteger(payload?.count)) return payload.count;
+  if (Number.isInteger(payload?.unread)) return payload.unread;
+  return 0;
+}
 
 export default function GlobalPlannerBubble() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [embedTimedOut, setEmbedTimedOut] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef(null);
   const triggerRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -27,15 +53,68 @@ export default function GlobalPlannerBubble() {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
+
     try {
       const stored = window.sessionStorage.getItem(DISMISS_STORAGE_KEY);
       if (stored === "1") {
         setDismissed(true);
       }
+
+      const minimizedStored = window.localStorage.getItem(
+        MINIMIZED_STORAGE_KEY,
+      );
+      if (minimizedStored === "1") {
+        setMinimized(true);
+      }
     } catch {
       // Ignore storage access errors.
     }
   }, []);
+
+  useEffect(() => {
+    if (pathname === "/chat") return;
+
+    let cancelled = false;
+
+    const fetchUnreadCount = async () => {
+      const conversationId = parseConversationIdFromSession();
+      if (!conversationId) {
+        if (!cancelled) setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          assertGuestPublicApiPath(
+            `/api/public/chat/${encodeURIComponent(conversationId)}/unread-count`,
+          ),
+          { cache: "no-store" },
+        );
+
+        const text = await response.text();
+        const payload = text ? JSON.parse(text) : null;
+
+        if (!response.ok) return;
+        if (!cancelled) {
+          setUnreadCount(Math.max(0, normalizeUnreadCount(payload)));
+        }
+      } catch {
+        // Keep previous unread count when poll fails.
+      }
+    };
+
+    fetchUnreadCount();
+    const intervalId = window.setInterval(
+      fetchUnreadCount,
+      UNREAD_POLL_INTERVAL_MS,
+    );
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (!open) {
@@ -117,6 +196,15 @@ export default function GlobalPlannerBubble() {
     }
   }
 
+  function setMinimizedPreference(nextValue) {
+    setMinimized(nextValue);
+    try {
+      window.localStorage.setItem(MINIMIZED_STORAGE_KEY, nextValue ? "1" : "0");
+    } catch {
+      // Ignore storage write errors.
+    }
+  }
+
   if (!chatbotEnabled || pathname === "/chat" || dismissed) {
     return null;
   }
@@ -126,7 +214,7 @@ export default function GlobalPlannerBubble() {
       {open && (
         <div
           ref={panelRef}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-4 z-[110] flex h-[70vh] w-[min(28rem,calc(100vw-2rem))] max-h-[42rem] flex-col overflow-hidden rounded-2xl border border-primary/30 bg-background-dark shadow-[0_20px_60px_-15px_rgba(0,0,0,0.65)] md:bottom-28 md:right-8"
+          className={`fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-4 z-[110] flex h-[70vh] w-[min(28rem,calc(100vw-2rem))] max-h-[42rem] flex-col overflow-hidden rounded-2xl border border-primary/30 bg-background-dark shadow-[0_20px_60px_-15px_rgba(0,0,0,0.65)] transition-all duration-300 md:bottom-28 md:right-8 ${mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}
           role="dialog"
           aria-modal="true"
           aria-label="Saffron Assistant planner chat"
@@ -151,6 +239,27 @@ export default function GlobalPlannerBubble() {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                closePanel("minimize_button");
+                setMinimizedPreference(true);
+              }}
+              className="rounded-md p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-100"
+              aria-label="Minimize planner chat"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+              </svg>
+            </button>
             <button
               ref={closeButtonRef}
               type="button"
@@ -227,7 +336,7 @@ export default function GlobalPlannerBubble() {
 
       <button
         ref={triggerRef}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[111] flex size-16 items-center justify-center rounded-full border border-primary/30 bg-primary text-background-dark shadow-[0_18px_40px_-12px_rgba(249,245,6,0.7)] transition-transform duration-200 hover:scale-110 active:scale-95 md:bottom-8 md:right-8"
+        className={`fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 z-[111] flex items-center justify-center rounded-full border border-primary/30 bg-primary text-background-dark shadow-[0_18px_40px_-12px_rgba(249,245,6,0.7)] transition-all duration-300 hover:scale-110 active:scale-95 md:bottom-8 md:right-8 ${minimized ? "size-12" : "size-16"} ${mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}
         type="button"
         aria-label={
           open ? `Hide ${plannerOverrideLabel}` : plannerOverrideLabel
@@ -238,13 +347,21 @@ export default function GlobalPlannerBubble() {
             closePanel("toggle_button");
             return;
           }
+          if (minimized) {
+            setMinimizedPreference(false);
+          }
           setOpen(true);
         }}
       >
+        {unreadCount > 0 && !open && (
+          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full border border-background-dark bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
-          className="h-8 w-8"
+          className={`${minimized ? "h-6 w-6" : "h-8 w-8"}`}
           fill="currentColor"
           aria-hidden="true"
         >

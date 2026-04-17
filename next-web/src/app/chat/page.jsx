@@ -926,20 +926,30 @@ export default function ChatPage() {
     <div className="space-y-8">
       <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
         {!conversationId && (
-          <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/10 p-4">
-            <p className="text-sm font-medium leading-relaxed text-slate-100">
-              {NEW_CHAT_WELCOME_MESSAGE}
-            </p>
-            <p className="mt-2 text-xs font-semibold text-primary">
-              {NEW_CHAT_HOURS_MESSAGE}
-            </p>
+          <div className="mb-4 space-y-3">
+            <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4">
+              <p className="text-sm font-medium leading-relaxed text-slate-100">
+                {NEW_CHAT_WELCOME_MESSAGE}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-primary">
+                {NEW_CHAT_HOURS_MESSAGE}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-ink/65 p-4 text-sm text-white/80">
+              <p className="font-semibold text-white">What happens next</p>
+              <ul className="mt-2 space-y-1 text-xs text-white/70">
+                <li>1. Share your email and name to start.</li>
+                <li>2. Optionally pick a planner before submission.</li>
+                <li>3. Send your first message once chat is active.</li>
+              </ul>
+            </div>
           </div>
         )}
 
         <form className="space-y-4" onSubmit={onStartChat}>
           <div className="rounded-2xl bg-ink/70 p-4 text-sm text-white/80">
             {chatbotEnabled
-              ? "Provide your contact details to start chat and get assigned to a planner."
+              ? "Share your contact details to start chat and get assigned quickly."
               : `${plannerOverrideLabel} is available. Provide your contact details to start a direct planner conversation.`}
           </div>
 
@@ -955,6 +965,9 @@ export default function ChatPage() {
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
               placeholder="you@example.com"
               maxLength={INPUT_LIMITS.email}
+              autoComplete="email"
+              inputMode="email"
+              enterKeyHint="next"
               required
             />
             {fieldErrors.email && (
@@ -974,6 +987,8 @@ export default function ChatPage() {
               className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
               placeholder="Your full name"
               maxLength={INPUT_LIMITS.name}
+              autoComplete="name"
+              enterKeyHint="next"
               required
             />
             {fieldErrors.name && (
@@ -1036,7 +1051,13 @@ export default function ChatPage() {
           {!selectedPlanner && plannerQuery.trim().length >= 2 && (
             <div className="rounded-2xl border border-white/10 bg-ink/60 p-3">
               {plannerLoading && (
-                <p className="text-sm text-white/70">Searching planners...</p>
+                <p className="inline-flex items-center gap-2 text-sm text-white/70">
+                  <span
+                    className="h-3 w-3 animate-spin rounded-full border border-white/40 border-t-primary"
+                    aria-hidden="true"
+                  />
+                  Searching available planners...
+                </p>
               )}
 
               {!plannerLoading && plannerSearchError && (
@@ -1139,8 +1160,14 @@ export default function ChatPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-ink transition hover:bg-amber-300"
+            className="inline-flex items-center gap-2 rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-ink transition hover:bg-amber-300 disabled:opacity-70"
           >
+            {submitting && (
+              <span
+                className="h-3.5 w-3.5 animate-spin rounded-full border border-ink/50 border-t-ink"
+                aria-hidden="true"
+              />
+            )}
             {submitting
               ? "Starting..."
               : chatbotEnabled
@@ -1203,6 +1230,16 @@ export default function ChatPage() {
                   setChatMessage(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, chatMessage: "" }));
                 }}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    (event.ctrlKey || event.metaKey) &&
+                    !sendingMessage
+                  ) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
                 className="focus-ring w-full rounded-xl border border-white/15 bg-ink/70 px-3 py-2 text-sm text-white"
                 maxLength={INPUT_LIMITS.message}
                 placeholder={
@@ -1211,6 +1248,9 @@ export default function ChatPage() {
                     : "Type your message for a planner"
                 }
               />
+              <p className="text-[11px] text-white/50">
+                Tip: Press Ctrl/Cmd + Enter to send quickly.
+              </p>
               {fieldErrors.chatMessage && (
                 <p className="text-xs text-red-400">
                   {fieldErrors.chatMessage}
@@ -1221,10 +1261,22 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={sendingMessage}
-              className="rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-ink transition hover:bg-amber-300 disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-full bg-saffron px-5 py-2 text-sm font-semibold text-ink transition hover:bg-amber-300 disabled:opacity-70"
             >
+              {sendingMessage && (
+                <span
+                  className="h-3.5 w-3.5 animate-spin rounded-full border border-ink/50 border-t-ink"
+                  aria-hidden="true"
+                />
+              )}
               {sendingMessage ? "Sending..." : "Send Message"}
             </button>
+
+            {sendingMessage && (
+              <p className="text-xs text-white/60">
+                Planner is receiving your message...
+              </p>
+            )}
           </form>
 
           <div className="mt-6 space-y-3">
@@ -1234,7 +1286,19 @@ export default function ChatPage() {
             </div>
 
             {historyLoading && (
-              <p className="text-sm text-white/70">Loading messages...</p>
+              <div className="space-y-2">
+                <p className="inline-flex items-center gap-2 text-sm text-white/70">
+                  <span
+                    className="h-3 w-3 animate-spin rounded-full border border-white/40 border-t-primary"
+                    aria-hidden="true"
+                  />
+                  Loading messages...
+                </p>
+                <div className="space-y-2" aria-hidden="true">
+                  <div className="h-14 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+                  <div className="h-14 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+                </div>
+              </div>
             )}
 
             {!historyLoading && messages.length === 0 && (

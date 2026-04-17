@@ -10,15 +10,16 @@ const DEFAULT_BUSINESS_HOURS = {
 export const DEFAULT_CHATBOT_SETTINGS = {
   enabled: true,
   welcomeMessage:
-    "Welcome to Saffron Gardens. I can help with venue tours, availability, pricing, and getting you to a planner.",
+    "Tell us your event date, guest count, and preferred style. We will guide you to the best venue setup.",
   quickReplies: [
     "Check availability",
+    "Share pricing options",
     "Book a venue tour",
     "Chat with planner",
   ],
   businessHours: DEFAULT_BUSINESS_HOURS,
   afterHoursMessage:
-    "Our planners are currently offline. Leave your details and we will follow up during business hours.",
+    "Our planners are currently offline. Share your details and we will follow up first thing during business hours.",
   autoEscalateToPlanner: true,
   escalationKeywords: [
     "planner",
@@ -29,7 +30,7 @@ export const DEFAULT_CHATBOT_SETTINGS = {
     "urgent",
   ],
   fallbackMessage:
-    "I can help with the basics, or you can ask to talk to a planner at any time.",
+    "I can help with the basics right away, and you can switch to a planner at any time.",
   handoverDelaySeconds: 30,
 };
 
